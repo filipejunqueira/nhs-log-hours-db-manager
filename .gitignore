@@ -1,0 +1,8 @@
+
+# Node / Vite (website)
+website/node_modules/
+website/dist/
+website/.vite/
+
+# Claude Code (per-project)
+.claude/settings.local.json
