@@ -6,3 +6,7 @@ website/.vite/
 
 # Claude Code (per-project)
 .claude/settings.local.json
+
+# Python (engine)
+__pycache__/
+*.pyc
