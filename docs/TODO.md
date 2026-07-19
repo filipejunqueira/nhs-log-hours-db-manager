@@ -4,13 +4,20 @@ Single source of truth for what is done, what is next, and what is parked.
 Update this file as part of every session wrap-up (project-knowledge-updater
 reads and propagates; session snapshots should reference it, not duplicate it).
 
-Last updated: 2026-07-19 (session: F1–F6 applied, committed; engine lock restored).
+Last updated: 2026-07-19 (session: F1–F6 committed, lock restored, ingest.sh
+added, website scaffolded).
 
 ## Now (in order)
 
-1. **Website v1** — scaffold `website/` per `docs/WEBSITE_PLAN.md` +
-   `docs/BUILD_NOTES.md` (Vite vue-ts, Tailwind v4). Blocked before first
-   public deploy on the §7 identity/hosting decision (user).
+1. **Website v1 components** — scaffold is DONE (see Done log); next slice per
+   `docs/WEBSITE_PLAN.md` §10 steps 3–4: `useHoursData` composable (fetch +
+   schema gate ≥ 1.1.0 + loading/error states), then the six v1 panels
+   (summary, totals, weekly, daily, methodology, integrity) wired into
+   App.vue, styled per §5 (calm, NHS-adjacent, tabular numerals, WCAG-AA).
+   Needs a fresh plan-gate for the component slice.
+2. **Deploy** — BLOCKED on two user decisions: §7 identity/hosting (the
+   dataset itself is the exposure, per BUILD_NOTES §1) and creating a GitHub
+   remote (repo currently has none). Then deploy.yml + scripts/update.sh.
 
 ## Later / parked
 
@@ -32,6 +39,13 @@ Last updated: 2026-07-19 (session: F1–F6 applied, committed; engine lock resto
 
 ## Done log
 
+- 2026-07-19 (night): website/ scaffolded per the approved plan.md (figures in
+  it refreshed to the 07-18 dataset first): Vite 8 + Vue 3.5 + TS + Tailwind
+  v4.3 via @tailwindcss/vite (no v3 config files), base "/nhs-hour-log/",
+  types/web-data.ts bound to the real JSON, lib/format.ts (the only
+  converters), real web_data.json in public/, boilerplate stripped. Verified:
+  vue-tsc clean, production build passes, preview serves the JSON at the
+  Pages base path (16 808 min, integrity all true, schema 1.1.0).
 - 2026-07-19 (evening): scripts/ingest.sh built and sandbox-tested (8
   scenarios: clean ingest, collision, changed/removed/backfilled historical
   rows, accept path, idempotent re-run, malformed input). Drift baseline is

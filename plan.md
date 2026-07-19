@@ -3,7 +3,7 @@
 ## Context
 
 The repo has a locked Python engine (`engine_v2/`) that emits `web_data.json`
-(schema 1.1.0, current totals: 12619 min / 210.32 h). The next step per
+(schema 1.1.0, current totals: 16808 min / 280.13 h). The next step per
 WEBSITE_PLAN.md §10 is to scaffold the Vue front-end that will render that JSON.
 This plan covers **scaffolding only** — no components, no composable, no
 deployment wiring yet.
@@ -276,7 +276,9 @@ npx vue-tsc --noEmit        # types compile cleanly
 2. `npx vue-tsc --noEmit` passes — types compile with no errors.
 3. `web_data.json` is fetchable at
    `http://localhost:5173/nhs-hour-log/web_data.json`.
-4. Check the real data: total_minutes is 12619 (210.32 h), all six integrity
-   flags are `true`, bands sum to total (5400 + 3600 + 3619 = 12619), classes
-   sum to total (11515 + 151 + 0 + 953 + 0 = 12619).
+4. Check the real data: total_minutes is 16808 (280.13 h), all six integrity
+   flags are `true`, bands sum to total (8528 + 4540 + 3740 = 16808), classes
+   sum to total (15704 + 151 + 0 + 953 + 0 = 16808).
+   (Figures refreshed 2026-07-19 after the 07-18 dataset adoption; the plan
+   originally cited the 22-day June snapshot.)
 5. No `tailwind.config.js` or `postcss.config.js` in the tree.
