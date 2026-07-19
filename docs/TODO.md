@@ -9,13 +9,14 @@ added, website scaffolded).
 
 ## Now (in order)
 
-1. **Website v1 components** — scaffold is DONE (see Done log); next slice per
-   `docs/WEBSITE_PLAN.md` §10 steps 3–4: `useHoursData` composable (fetch +
-   schema gate ≥ 1.1.0 + loading/error states), then the six v1 panels
-   (summary, totals, weekly, daily, methodology, integrity) wired into
-   App.vue, styled per §5 (calm, NHS-adjacent, tabular numerals, WCAG-AA).
-   Needs a fresh plan-gate for the component slice.
-2. **Deploy** — BLOCKED on two user decisions: §7 identity/hosting (the
+1. **User eyeball of the v1 site** — `cd website && npm run dev`, check the
+   design register (§5) and the figures. Rendered-DOM verification is manual
+   for now (page is client-rendered; static checks all pass). Optional
+   follow-up: a vitest + happy-dom smoke test asserting the headline figures
+   render — would need a small plan-gate (new dev-deps).
+2. **v1.1 components** (cross-tab, cumulative chart, stats panel) — data
+   already in the JSON; additive, per WEBSITE_PLAN §4.
+3. **Deploy** — BLOCKED on two user decisions: §7 identity/hosting (the
    dataset itself is the exposure, per BUILD_NOTES §1) and creating a GitHub
    remote (repo currently has none). Then deploy.yml + scripts/update.sh.
 
@@ -32,6 +33,10 @@ added, website scaffolded).
   invariants with proofs → audit history → reproduction commands. Assemble
   largely from `AUDIT_BRIEF.md` and the audit reports.
 - **money.py (Part ii)** and the private financial view — after the dashboard.
+- **Schema 1.2.0 (next deliberate engine lock-lift)**: emit
+  `above_contract_minutes` so the header figure comes from the engine and the
+  sanctioned `sumMinutes` in format.ts is deleted (decision of 2026-07-19:
+  option a now, c later).
 - Stale `-isation` filename references in `audit/README.md:32` and the
   characterisation suite's own docstring (cosmetic; run command shown is wrong).
 - Start using `notes/snapshots/` in this repo (end sessions with
@@ -39,6 +44,16 @@ added, website scaffolded).
 
 ## Done log
 
+- 2026-07-19 (night, later): website v1 components built per approved plan.md:
+  useHoursData (fetch + schema gate ≥ 1.1.0 + loading/error states, gate
+  unit-tested 11 cases), six panels (summary, totals, weekly incl. baseline
+  flag affordance, daily, methodology, integrity) wired into App.vue, NHS-blue
+  theme token, tabular numerals, semantic tables. Header shows hours above
+  contract via sanctioned sumMinutes (user decision: audience is non-technical
+  payroll; principle restated in CLAUDE.md — engine determines every hours
+  figure, browser only re-presents). Verified: vue-tsc clean, build passes,
+  grep audit (arithmetic only in format.ts), served JSON exact. Rendered DOM
+  awaits user eyeball.
 - 2026-07-19 (night): website/ scaffolded per the approved plan.md (figures in
   it refreshed to the 07-18 dataset first): Vite 8 + Vue 3.5 + TS + Tailwind
   v4.3 via @tailwindcss/vite (no v3 config files), base "/nhs-hour-log/",

@@ -1,1 +1,6 @@
 @import "tailwindcss";
+
+@theme {
+  /* NHS identity blue — the single accent colour (WEBSITE_PLAN §5). */
+  --color-nhs-blue: #005eb8;
+}

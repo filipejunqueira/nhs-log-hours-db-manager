@@ -15,7 +15,12 @@ Engine = Python (built, locked). Website = Vue 3 + TS + Tailwind v4 + Vite
 ## Cardinal rules
 - Do NOT modify engine_v2/ — complete, audited, locked (also denied in
   .claude/settings.json). Treat its JSON output as a fixed contract.
-- Front end does zero calculation and shows no money. The only browser
-  arithmetic is minutes ÷ 60 for display.
+- The engine determines every hours figure; the front end only re-presents
+  them and shows no money. Permitted browser arithmetic, confined to
+  website/src/lib/format.ts: minutes ÷ 60 for display, HH:MM clock formatting,
+  and sums of already-computed minute values (sumMinutes). The browser never
+  classifies, bands, or produces a figure the engine could disagree with.
+  (Amended 2026-07-19, user decision; derived figures move into the engine
+  output at the next schema bump.)
 - Identity-light: no `subject` in the committed JSON until the §7 visibility
   decision is made.
