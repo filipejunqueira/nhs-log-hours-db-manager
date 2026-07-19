@@ -43,7 +43,9 @@ output (e.g. payroll), and by the not-yet-built Part (ii).
   Column matching is case-insensitive. Additional columns are ignored.
 - One row represents one continuous worked period.
 - **Date** is accepted as ISO `YYYY-MM-DD` or as an explicit month-name form
-  (e.g. `1-Jun-2026`, `1 June 2026`). A purely numeric non-ISO date
+  (e.g. `1-Jun-2026`, `1 June 2026`); month-name forms also accept a two-digit
+  year (e.g. `1-Jun-26`, read as 2026 -- an out-of-window year still dies at
+  the bank-holiday year guard). A purely numeric non-ISO date
   (e.g. `01/06/2026`) is treated as ambiguous and rejected.
 - **Start** and **End** are 24-hour `HH:MM` (seconds `HH:MM:SS` also accepted).
 - The worker's measured unit is **minutes**; clock times are recorded to the minute.
@@ -107,7 +109,10 @@ output (e.g. payroll), and by the not-yet-built Part (ii).
 The program is intended to refuse to run, with an error naming the offending
 row(s), in these situations: a period whose End equals its Start (zero length); a
 period whose End precedes its Start on the same day (including a single-row
-overnight shift, which is not supported); two periods on the same date that
+overnight shift, which is not supported -- the error advises splitting into a
+row ending 23:59 and a row starting 00:00, which deliberately un-records the
+23:59-00:00 minute: each overnight shift under-counts by exactly one minute,
+never the reverse); two periods on the same date that
 overlap or duplicate (touching endpoints are allowed, so split and contiguous
 shifts are fine); a date in a year the bank-holiday table does not cover; a
 slash- or dash-separated numeric date (ambiguous day/month order); a date in any
