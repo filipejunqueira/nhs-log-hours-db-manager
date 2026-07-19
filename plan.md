@@ -1,7 +1,8 @@
 # Plan: Website v1 components (useHoursData + six panels)
 
-Previous plan (scaffold) executed and committed as c16bb77; this file now
-gates the next slice: WEBSITE_PLAN.md §10 steps 3–4.
+STATUS: EXECUTED 2026-07-19 — scaffold committed as c16bb77, components as
+e9eb01d, deployed live to GitHub Pages the same day. Kept for the work-audit
+trail; the next slice (v1.1 / improvements) needs a fresh plan.
 
 ## Success criteria
 

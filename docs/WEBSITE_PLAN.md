@@ -180,7 +180,9 @@ contrast, keyboard-navigable, responsive down to mobile. No trackers or analytic
 
 ---
 
-## 7. Privacy, identity & hosting [YOUR DECISION — needed before going live]
+## 7. Privacy, identity & hosting [DECIDED 2026-07-19: public repo + public
+Pages, identity-light JSON (no `subject`); accepted with the exposure
+trade-offs below understood — see docs/BUILD_NOTES.md §1]
 
 GitHub Pages on a public repo is **world-readable**. The dashboard will show your
 working pattern and (optionally) your name and NHS employer. Decide before deploy:
