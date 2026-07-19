@@ -80,7 +80,9 @@ class RawDay:
     date: date
     start_min: int          # minutes from midnight
     end_min: int
-    provided_min: int | None = None  # CSV's own Minutes column, if any (for cross-check)
+    provided_min: float | str | None = None  # CSV's own Minutes column, if any
+    # (for cross-check; raw float so sub-minute mismatches warn, or the raw
+    # string when non-numeric so the skipped cross-check warns)
 
     @property
     def duration_min(self) -> int:
@@ -307,9 +309,9 @@ def ingest_csv(path: str) -> list:
                 mv = (row.get(c_min) or "").strip()
                 if mv:
                     try:
-                        provided = int(round(float(mv)))
+                        provided = float(mv)
                     except ValueError:
-                        provided = None
+                        provided = mv  # non-numeric: warned in compute(), never fatal
             entries.append((i, RawDay(date=d, start_min=smin, end_min=emin, provided_min=provided)))
 
     _reject_overlaps(entries)
@@ -445,7 +447,7 @@ def _statistics(days: list, total_min: int, by_band: dict, by_class: dict,
 # ─── invariants ─────────────────────────────────────────────────────────────
 def _check_invariants(raw_total: int, weeks: list, atomic: list, days: list,
                       by_band: dict, by_class: dict, cross_tab: dict,
-                      warnings: list) -> Integrity:
+                      warnings: list, raw_rows: list) -> Integrity:
     seg_total = sum(s.duration_min for s in atomic)
 
     # I1 conservation (overall + per week)
@@ -489,9 +491,16 @@ def _check_invariants(raw_total: int, weeks: list, atomic: list, days: list,
     crosstab &= (sum(cross_tab[b][c] for b in ThresholdBand for c in UnsocialClass) == seg_total)
     assert crosstab, "I5 cross-tab reconciliation failed"
 
-    # I6 per-day worked minutes cannot exceed the clock span (catches overlap/duplicate
-    # rows that slipped past ingest, e.g. if compute() is called directly with raw rows)
+    # I6 per-day worked minutes cannot exceed the clock span, and per-day raw
+    # periods must not overlap pairwise (catches overlap/duplicate rows that
+    # slipped past ingest, e.g. if compute() is called directly with raw rows)
     span = all(r.duration_min <= r.end_min - r.start_min for r in days)
+    by_day: dict = {}
+    for r in raw_rows:
+        by_day.setdefault(r.date, []).append(r)
+    for rs in by_day.values():
+        rs = sorted(rs, key=lambda r: (r.start_min, r.end_min))
+        span &= all(a.end_min <= b.start_min for a, b in zip(rs, rs[1:]))
     assert span, "I6 per-day worked-minutes-exceed-span failed (overlapping/duplicate periods?)"
 
     ubw = sum(w.unsocial_within_baseline_min for w in weeks)
@@ -512,7 +521,12 @@ def compute(rows: list) -> HoursResult:
     # provided-minutes cross-check -> warnings as DATA (not prints)
     warnings: list = []
     for r in sorted(rows, key=lambda r: (r.date, r.start_min)):
-        if r.provided_min is not None and r.provided_min != r.duration_min:
+        if isinstance(r.provided_min, str):
+            warnings.append(
+                f"{r.date.isoformat()}: CSV Minutes={r.provided_min!r} is not numeric; "
+                f"cross-check skipped (recomputed value is authoritative)"
+            )
+        elif r.provided_min is not None and r.provided_min != r.duration_min:
             warnings.append(
                 f"{r.date.isoformat()}: CSV Minutes={r.provided_min} differs from "
                 f"recomputed {r.duration_min} (recomputed value is authoritative)"
@@ -587,7 +601,7 @@ def compute(rows: list) -> HoursResult:
 
     raw_total = sum(r.duration_min for r in rows)
     integrity = _check_invariants(raw_total, week_summaries, atomic, days,
-                                  by_band, by_class, cross_tab, warnings)
+                                  by_band, by_class, cross_tab, warnings, rows)
 
     totals = Totals(
         total_min=total_min, day_count=len(days), week_count=len(week_summaries),
