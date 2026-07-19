@@ -9,28 +9,16 @@ added, website scaffolded).
 
 ## Now (in order)
 
-0. **[USER, one click] Fix Pages source** — repo Settings → Pages → Build and
-   deployment → Source: change "Deploy from a branch" to "GitHub Actions",
-   then Actions tab → "Deploy website to GitHub Pages" → Re-run all jobs.
-   (Auto-enablement created the site with the legacy Jekyll source, so the
-   live URL currently serves the Jekyll-rendered repo markdown, not the app.
-   Diagnosed 2026-07-19: docs/TODO.html returns 200, / returns 404.)
-   Site URL: https://filipejunqueira.github.io/nhs-log-hours-db-manager/
-1. **User eyeball of the v1 site** — `cd website && npm run dev`, check the
-   design register (§5) and the figures. Rendered-DOM verification is manual
-   for now (page is client-rendered; static checks all pass). Optional
-   follow-up: a vitest + happy-dom smoke test asserting the headline figures
-   render — would need a small plan-gate (new dev-deps).
-2. **v1.1 components** (cross-tab, cumulative chart, stats panel) — data
+1. **v1.1 components** (cross-tab, cumulative chart, stats panel) — data
    already in the JSON; additive, per WEBSITE_PLAN §4.
-3. **Website improvements** (user request 2026-07-19, needs planning + a
+2. **Website improvements** (user request 2026-07-19, needs planning + a
    plan-gate; both likely need engine schema 1.2.0 since aggregation belongs
    in the engine, not the browser):
    - per-MONTH breakdown (candidate: engine emits a `monthly` array
      mirroring `weekly`);
    - "hours not yet paid by payroll" (needs a paid-up-to marker as input —
      where does the user record what payroll has processed? Design question).
-4. **scripts/update.sh** — the full export → ingest → copy to
+3. **scripts/update.sh** — the full export → ingest → copy to
    website/public → commit/push chain (BUILD_NOTES §5 caveats: headless
    xlsx→csv, non-interactive git auth, surfaced failures).
 
@@ -58,6 +46,16 @@ added, website scaffolded).
 
 ## Done log
 
+- 2026-07-19 (SITE LIVE): pushed to git@github.com:filipejunqueira/
+  nhs-log-hours-db-manager.git over SSH (§7 decided by user: public repo +
+  public Pages). vite base fixed to /nhs-log-hours-db-manager/. deploy.yml
+  added; actions bumped to node24-era majors (checkout v7, setup-node v7,
+  configure-pages v6, upload/deploy-pages v5; build on Node 24) after a
+  node20 deprecation warning. Pages source was auto-enabled as legacy
+  Jekyll — user flipped it to GitHub Actions. VERIFIED LIVE:
+  https://filipejunqueira.github.io/nhs-log-hours-db-manager/ serves the
+  Vue app and web_data.json (16 808 min, schema 1.1.0). User confirmed the
+  local render looks good; the deployed site is the same build.
 - 2026-07-19 (night, later): website v1 components built per approved plan.md:
   useHoursData (fetch + schema gate ≥ 1.1.0 + loading/error states, gate
   unit-tested 11 cases), six panels (summary, totals, weekly incl. baseline
