@@ -4,7 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/nhs-hour-log/',
+  base: '/nhs-log-hours-db-manager/',
   plugins: [
     vue(),
     tailwindcss(),
