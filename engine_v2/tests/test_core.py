@@ -18,8 +18,8 @@ from afc_hours import core  # noqa: E402
 from afc_hours.core import ThresholdBand as TB, UnsocialClass as UC, DayType  # noqa: E402
 
 REAL_LOG = os.environ.get("AFC_REAL_LOG") or os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    "data", "filipe_working_hours_log_25-06-2026.csv")
+    os.path.dirname(os.path.abspath(__file__)),
+    "fixtures", "hours_2026-07-14.csv")
 
 
 # --- helpers ---
@@ -226,8 +226,8 @@ def test_real_log_all_invariants_pass():
 
 def test_real_log_grand_totals():
     res = _real()
-    assert res.totals.total_min == 11919          # 198.65h
-    assert bands(res) == {TB.CONTRACTED: 5400, TB.ADDITIONAL: 3600, TB.OVERTIME: 2919}
+    assert res.totals.total_min == 16808          # 280.13h
+    assert bands(res) == {TB.CONTRACTED: 8528, TB.ADDITIONAL: 4540, TB.OVERTIME: 3740}
 
 
 def test_real_log_week_w23_hand_derivation():
@@ -250,7 +250,7 @@ def test_real_log_unsocial_class_totals():
     assert c[UC.WEEKDAY_NIGHT] == 151   # 54 + 79 + 18 (3rd, 4th, 24th evenings)
     assert c[UC.SATURDAY] == 0
     assert c[UC.BANK_HOLIDAY] == 0
-    assert c[UC.DAYTIME] == 11919 - 953 - 151
+    assert c[UC.DAYTIME] == 16808 - 953 - 151
 
 
 def test_real_log_no_unsocial_within_baseline():
@@ -260,7 +260,8 @@ def test_real_log_no_unsocial_within_baseline():
 
 def test_real_log_iso_weeks_present():
     weeks = {w.iso_week for w in _real().weeks}
-    assert weeks == {"2026-W23", "2026-W24", "2026-W25", "2026-W26"}
+    assert weeks == {"2026-W23", "2026-W24", "2026-W25", "2026-W26",
+                     "2026-W27", "2026-W28", "2026-W29"}
 
 
 # === audit fixes: overlap/duplicate (F1), diagnostics (F2/F3/F4), I6 ======

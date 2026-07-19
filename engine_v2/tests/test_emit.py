@@ -14,8 +14,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from afc_hours import core, emit, rules  # noqa: E402
 
 REAL_LOG = os.environ.get("AFC_REAL_LOG") or os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    "data", "filipe_working_hours_log_25-06-2026.csv")
+    os.path.dirname(os.path.abspath(__file__)),
+    "fixtures", "hours_2026-07-14.csv")
 PINNED = datetime(2026, 6, 26, 0, 0, 0, tzinfo=timezone.utc)
 
 
@@ -57,8 +57,8 @@ def test_methodology_present_and_mentions_minutes():
 def test_content_totals_match_core():
     res = core.compute_from_csv(REAL_LOG)
     c = emit.build_payload(res, generated_at=PINNED)["content"]
-    assert c["totals"]["total_minutes"] == res.totals.total_min == 11919
-    assert c["totals"]["minutes_by_band"] == {"contracted": 5400, "additional": 3600, "overtime": 2919}
+    assert c["totals"]["total_minutes"] == res.totals.total_min == 16808
+    assert c["totals"]["minutes_by_band"] == {"contracted": 8528, "additional": 4540, "overtime": 3740}
     assert c["totals"]["minutes_by_class"]["sunday"] == 953
     assert c["totals"]["unsocial_within_baseline_minutes"] == 0
 
@@ -74,7 +74,7 @@ def test_integrity_block_all_true():
     ig = _payload()["content"]["integrity"]
     assert ig["conservation_ok"] and ig["partitions_ok"] and ig["uniqueness_ok"]
     assert ig["banding_formula_ok"] and ig["crosstab_ok"] and ig["span_ok"]
-    assert ig["total_raw_minutes"] == ig["total_segment_minutes"] == 11919
+    assert ig["total_raw_minutes"] == ig["total_segment_minutes"] == 16808
 
 
 def test_schema_version_is_current():
@@ -89,10 +89,11 @@ def test_methodology_documents_mean_denominator():
 
 def test_weekly_and_daily_present():
     c = _payload()["content"]
-    assert {w["iso_week"] for w in c["weekly"]} == {"2026-W23", "2026-W24", "2026-W25", "2026-W26"}
-    assert len(c["daily"]) == 21
-    assert len(c["cumulative"]) == 21
-    assert c["cumulative"][-1]["cumulative_minutes"] == 11919
+    assert {w["iso_week"] for w in c["weekly"]} == {"2026-W23", "2026-W24", "2026-W25", "2026-W26",
+                                                    "2026-W27", "2026-W28", "2026-W29"}
+    assert len(c["daily"]) == 32
+    assert len(c["cumulative"]) == 32
+    assert c["cumulative"][-1]["cumulative_minutes"] == 16808
 
 
 # --- determinism ---
