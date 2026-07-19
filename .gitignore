@@ -10,3 +10,6 @@ website/.vite/
 # Python (engine)
 __pycache__/
 *.pyc
+
+# Audit session plan - explicitly excluded from commits by name
+audit/session_plan_reference_only_not_commit.md

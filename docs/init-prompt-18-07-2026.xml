@@ -1,0 +1,161 @@
+<task name="nhs-hours-engine-fix" mode="implementation">
+
+    <working_directory>
+        /home/filipejunqueira/code/nhs-hour-log — run `pwd` to confirm. Do not use ~ in
+        paths: inside this container HOME is /home/filipejunqueira/containers/claude-home.
+        Use relative or absolute paths.
+    </working_directory>
+
+    <context>
+        A logic audit was completed 2026-07-06 and its report is at
+        logic-audit_2026-07-06.md (untracked, 238 lines, findings F1-F6). Its verdict:
+        the hours arithmetic is CORRECT and nothing overstates worked hours. It applied
+        no fixes because engine_v2/** was locked, so each finding carries a patch for
+        deliberate application. A companion characterisation suite lives at
+        audit/test_characterization.py (29 checks, passing as of 07-06).
+
+        This run APPLIES those patches. The engine_v2/** deny rule has been lifted for
+        this run only — that is a deliberate, temporary exception, not a new default.
+    </context>
+
+    <authority>
+        <rule>
+            This task specification OVERRIDES CLAUDE.md wherever they conflict.
+        </rule>
+        <override target="CLAUDE.md">
+            CLAUDE.md line 16 states "Do NOT modify engine_v2/ — complete, audited,
+            locked (also denied in .claude/settings.json)". That instruction is SUSPENDED
+            for this run only. The corresponding deny rules have been removed from
+            .claude/settings.json for the same reason. Modifying engine_v2/ is the
+            explicit purpose of this task — do not stall, do not ask whether you are
+            allowed, and do not treat the CLAUDE.md line as a blocker.
+        </override>
+        <scope_of_suspension>
+            The suspension covers ONLY the F1-F6 patches and the test repointing described
+            in steps 2-4. It is not licence for unrelated refactoring, tidying, renaming,
+            reformatting or "improvements" anywhere under engine_v2/. Every byte you change
+            there must trace to a named finding.
+        </scope_of_suspension>
+        <restoration>
+            The deny rules and the CLAUDE.md instruction are the correct default and will
+            be restored after this run. Mention this in your handover report so it is not
+            forgotten.
+        </restoration>
+    </authority>
+
+    <critical_safety_rule>
+        This engine feeds a payroll submission. If ANY change you make alters a computed
+        figure for the current dataset — total minutes, band split, class split, per-day
+        values — STOP IMMEDIATELY, do not proceed, and report exactly which figure moved
+        and why. Robustness and validation fixes must be output-neutral for valid input.
+        F6 (the overnight split dropping one minute) is DOCUMENTED behaviour: do not
+        "fix" it without asking.
+    </critical_safety_rule>
+
+    <characterisation_suite_semantics>
+        audit/test_characterization.py pins CURRENT behaviour, including the defects, so
+        that fixing a defect shows up as a visible test failure. That is by design. When
+        a pinned-defect test fails after you apply its patch, that is the guardrail
+        working: update that test deliberately, state in your report which test you
+        changed and why. NEVER edit a test merely to make the suite green.
+    </characterisation_suite_semantics>
+
+    <step n="0" name="establish_state" gate="true">
+        Before changing anything, establish and report:
+        - Line count, date range and first/last row of
+        engine_v2/data/filipe_working_hours_log.csv
+        - Whether it is byte-identical to either data/exports/hours_export_2026-06-25.csv
+        or data/exports/hours_export_2026-07-18.csv (use cmp)
+        - Full diff between the two staged exports — how many rows changed, and the
+        total-minutes delta
+        - Result of running audit/test_characterization.py as-is
+        - Result of running the engine's own suite: python3 tests/test_*.py from engine_v2/
+        - Whether engine_v2/web_data.json is stale relative to the current CSV
+        STOP after reporting. Do not proceed to step 1 until I confirm which dataset is
+        authoritative.
+    </step>
+
+    <step n="1" name="data_reconciliation">
+        Once I have named the authoritative export:
+        - Copy it to engine_v2/data/filipe_working_hours_log.csv (canonical, normalised).
+        - Copy it also to tests/fixtures/hours_&lt;YYYY-MM-DD&gt;.csv where the date is the
+        LATEST work date present in the data — derive it, do not use today's date.
+        - Leave data/exports/ untouched: those are raw provenance and accumulate.
+        - Note the header difference between exports (column 6 is "Main accomplishments
+        in the day" in one and " Main events in the day" — with a leading space — in
+        the other). Confirm the parser handles both or is insensitive to it; if not,
+        that is a new finding.
+        - Note that time formats are inconsistent WITHIN a single file (8:45 unpadded
+        alongside 08:03 padded). Confirm the parser handles both; if not, new finding.
+    </step>
+
+    <step n="2" name="fix_F1">
+        F1 (HIGH) — the regression suite is broken: engine_v2/tests/test_core.py:22 and
+        test_emit.py:18 hardcode data/filipe_working_hours_log_25-06-2026.csv, which does
+        not exist, and their hand-derived totals are stale.
+        Fix: repoint them at the FROZEN FIXTURE from step 1, never at the live CSV, and
+        re-derive their expected values from that fixture. Show the old and new expected
+        values side by side in your report.
+    </step>
+
+    <step n="3" name="fix_F2_F3_F4">
+        Apply the patches carried in logic-audit_2026-07-06.md for F2 (Minutes = inf
+        crashes ingest with an uncaught OverflowError), F3 (invariant net misses
+        duplicates fitting within the day span) and F4 (Minutes cross-check has silent
+        paths). Apply them ONE AT A TIME, running both suites after each, and report each
+        result before moving to the next. Any output change for valid data triggers the
+        critical safety rule.
+    </step>
+
+    <step n="4" name="fix_F5_F6_docs">
+        F5 and F6 are documentation divergences. Update the documentation to match actual
+        behaviour — do NOT change the behaviour. State clearly which document you edited.
+    </step>
+
+    <step n="5" name="regenerate">
+        Regenerate engine_v2/web_data.json from the canonical CSV via scripts/regen.sh.
+        Report the before/after figures explicitly: total minutes, distinct days, band
+        split, class split, schema version. The previously recorded 22 days / 12 619 min
+        / bands 5400-3600-3619 is STALE REFERENCE — state whether your figures match or
+        differ, and by how much.
+    </step>
+
+    <step n="6" name="housekeeping">
+        - logic-audit_2026-07-06.md links audit/test_characterisation.py (British -isation)
+        but the file is audit/test_characterization.py (-ization). Fix the link; do not
+        rename the file unless renaming is trivially safe and nothing else references it.
+        - docs/CONTINUATION.md shows as deleted but unstaged. Report what it was and
+        whether the deletion is intentional. Do not resolve it yourself.
+        - audit/session_plan_reference_only_not_commit.md is named as excluded from
+        commits — respect that.
+        - .claude/settings.json is MODIFIED (deny rules emptied) and
+        .claude/settings.json.bak-20260718-190154 is untracked scratch. Neither belongs
+        in a commit — exclude both from your proposed grouping.
+    </step>
+
+    <step n="7" name="handover">
+        Run both suites one final time and paste the output. Report git status. Propose a
+        commit grouping (which files in which commit, with messages) but DO NOT COMMIT.
+        Remind me to restore the engine_v2/** deny rules from
+        .claude/settings.json.bak-20260718-190154.
+    </step>
+
+    <out_of_scope>
+        <item>No website or Vue work — that is the next task, separately prompted.</item>
+        <item>No money.py.</item>
+        <item>No changes to data/exports/ contents.</item>
+        <item>No commits.</item>
+    </out_of_scope>
+
+    <invariants>
+        <invariant id="I-figures">No computed payroll figure changes without an explicit
+            stop-and-ask.</invariant>
+        <invariant id="I-fixture">No test reads a live data path at runtime; all pin to
+            tests/fixtures/.</invariant>
+        <invariant id="I-exports">data/exports/ is read-only.</invariant>
+        <invariant id="I-tests">No test is edited solely to make the suite pass.</invariant>
+        <invariant id="I-scope">Every byte changed under engine_v2/ traces to a named finding F1-F6.</invariant>
+        <invariant id="I-nocommit">Nothing is committed.</invariant>
+    </invariants>
+
+</task>
