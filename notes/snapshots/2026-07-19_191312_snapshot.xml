@@ -1,0 +1,158 @@
+<session_snapshot>
+  <origin>
+    <project>nhs-hour-log</project>
+    <session_date>2026-07-19</session_date>
+    <session_summary>Applied the F1-F6 logic-audit patches to the (temporarily
+    unlocked) engine and re-locked it; adopted the 2026-07-18 dataset; built
+    scripts/ingest.sh with a drift gate; created the docs/TODO.md ledger;
+    scaffolded and built website v1 (Vue 3 + TS + Tailwind v4); pushed the
+    repo public and deployed the dashboard live to GitHub Pages.</session_summary>
+  </origin>
+
+  <do_not_redo>
+    <item>F1-F6 are APPLIED and committed (engine tests repointed to the
+    frozen fixture, F2-F4 core patches output-neutral by content-hash proof,
+    F5/F6 documented in AUDIT_BRIEF). Do not re-apply. F6 (overnight split
+    drops one minute) is documented behaviour - never "fix" it unasked.</item>
+    <item>Dataset decision: data/exports/hours_export_2026-07-18.csv is
+    authoritative (user-confirmed). The 06-25 export disagrees with later
+    data on 19 June dates and is kept ONLY as provenance - never re-adopt it.</item>
+    <item>The engine_v2/** deny rules are RESTORED in .claude/settings.json;
+    the lock is the standing default again. Any engine change needs a new
+    deliberate lift (next planned one: schema 1.2.0).</item>
+    <item>Section 7 hosting/identity: DECIDED public repo + public Pages,
+    identity-light JSON (no subject). Exposure trade-offs were explained and
+    accepted 2026-07-19. Recorded in WEBSITE_PLAN section 7.</item>
+    <item>Front-end principle: option a+c decided. sumMinutes in
+    website/src/lib/format.ts is the sanctioned browser aggregation
+    (CLAUDE.md amended); above_contract_minutes moves into the engine at
+    schema 1.2.0, then sumMinutes is deleted.</item>
+    <item>Git transport: SSH (works in-container, tested). Remote origin =
+    git@github.com:filipejunqueira/nhs-log-hours-db-manager.git.</item>
+    <item>Pages source is set to "GitHub Actions" (user flipped it after the
+    auto-enablement chose legacy Jekyll). Actions bumped to node24-era
+    majors; the Node 20 deprecation warning is resolved.</item>
+    <item>Audit docs consolidated: docs/logic-audit_2026-07-06.md is the
+    REPORT, docs/logic-audit-prompt_2026-07-06.md is the commissioning
+    prompt. They were never duplicates.</item>
+  </do_not_redo>
+
+  <decisions_made>
+    <decision topic="drift-gate-baseline">
+      <what>scripts/ingest.sh compares new exports against the CANONICAL CSV
+      (engine_v2/data/filipe_working_hours_log.csv), not the newest-named
+      export.</what>
+      <why>Legacy exports are named by export date and outsort entry-date
+      names, so an accepted correction would re-flag forever; the canonical
+      CSV is by definition the last accepted state.</why>
+    </decision>
+    <decision topic="browser-arithmetic">
+      <what>Engine determines every hours figure; browser may only
+      re-present (divide by 60, HH:MM, labels, sumMinutes of banded values),
+      all confined to website/src/lib/format.ts.</what>
+      <why>Audience is a non-technical payroll reader - presentation clarity
+      supersedes strict zero-calculation; the red line is that nothing
+      pay-determining is computed outside the testable Python engine.</why>
+    </decision>
+    <decision topic="docs-location">
+      <what>Non-config documentation lives in docs/; docs/TODO.md is the
+      project ledger (Now/Next/Later/Done), synced every wrap-up.</what>
+      <why>User preference; fixes the tracking gap that made this session's
+      restore detective work.</why>
+    </decision>
+  </decisions_made>
+
+  <current_state>
+    <item>Branch main == origin/main at 3dc8c89; working tree CLEAN; branch
+    logic-audit-2026-07-06 also pushed.</item>
+    <item>Site LIVE and verified: https://filipejunqueira.github.io/nhs-log-hours-db-manager/
+    serves the Vue app; its web_data.json returns 16808 min, schema 1.1.0.</item>
+    <item>Test suites at last full run this session: engine 67/67
+    (rules 11, core 39, emit 17), characterisation 29/29.</item>
+    <item>Current data: 32 days, 2026-06-01 to 2026-07-14, 16808 min; bands
+    8528/4540/3740; classes daytime 15704, night 151, sunday 953;
+    within-baseline 0; frozen fixture engine_v2/tests/fixtures/hours_2026-07-14.csv.</item>
+    <item>Website builds clean: npx vue-tsc --noEmit and npm run build (run
+    from website/ - vue-tsc is a local devDependency).</item>
+    <item>plan.md is marked EXECUTED; the next slice needs a fresh
+    plan-gate.</item>
+  </current_state>
+
+  <next_steps>
+    <step priority="1">See docs/TODO.md - it is current as of this session's
+    end (Done log includes the live deploy). Now item 1: v1.1 components
+    (cross-tab, cumulative chart, stats panel - data already in the JSON).</step>
+    <step priority="2">TODO.md Now item 2: plan the user-requested
+    improvements (per-month breakdown, unpaid-hours tracking) - both point
+    at engine schema 1.2.0; monthly banding across pay-week boundaries needs
+    a definition decision first; unpaid-hours needs a paid-up-to input whose
+    home (config file vs money.py) is undecided.</step>
+    <step priority="3">TODO.md Now item 3: scripts/update.sh automation
+    chain (BUILD_NOTES section 5 caveats).</step>
+  </next_steps>
+
+  <files_touched>
+    <file action="modified" path="engine_v2/afc_hours/core.py">F2-F4 patches (only engine code change; lock now restored)</file>
+    <file action="modified" path="engine_v2/tests/test_core.py">F1 repoint + re-pin</file>
+    <file action="modified" path="engine_v2/tests/test_emit.py">F1 repoint + re-pin</file>
+    <file action="created" path="engine_v2/tests/fixtures/hours_2026-07-14.csv">frozen test fixture</file>
+    <file action="modified" path="engine_v2/data/filipe_working_hours_log.csv">canonical CSV = 07-18 export</file>
+    <file action="modified" path="engine_v2/web_data.json">regenerated, 16808 min</file>
+    <file action="modified" path="engine_v2/AUDIT_BRIEF.md">F5/F6 documentation</file>
+    <file action="modified" path="audit/test_characterization.py">repointed + 4 defect pins flipped to fixed-behaviour pins</file>
+    <file action="created" path="scripts/ingest.sh">CSV intake with drift gate (sandbox-tested, 8 scenarios)</file>
+    <file action="created" path="docs/TODO.md">project ledger</file>
+    <file action="created" path="website/">full Vue 3 + TS + Tailwind v4 app, v1 complete</file>
+    <file action="created" path=".github/workflows/deploy.yml">Pages deploy, node24-era action majors</file>
+    <file action="modified" path="CLAUDE.md">browser-arithmetic principle amendment</file>
+    <file action="modified" path="plan.md">v1 components plan, marked EXECUTED</file>
+    <file action="modified" path="docs/WEBSITE_PLAN.md">section 7 marked DECIDED</file>
+    <file action="modified" path="docs/logic-audit_2026-07-06.md">moved from root, link fixed</file>
+    <file action="created" path="docs/logic-audit-prompt_2026-07-06.md">renamed commissioning prompt</file>
+    <file action="deleted" path="docs/CONTINUATION.md">superseded, deletion user-confirmed</file>
+  </files_touched>
+
+  <files_to_read>
+    <file path="docs/TODO.md">the ledger - start here</file>
+    <file path="plan.md">executed plan for context; write a fresh one for the next slice</file>
+    <file path="CLAUDE.md">amended browser-arithmetic principle + cardinal rules</file>
+    <file path="docs/WEBSITE_PLAN.md">sections 4-5 for v1.1 components; docs/BUILD_NOTES.md corrections still win</file>
+    <file path="website/src/lib/format.ts">the only converters; sumMinutes contract</file>
+  </files_to_read>
+
+  <domain_state>
+    <engine>Schema 1.1.0, locked (deny rules active). Pure stdlib. Suites:
+    67 engine checks + 29 characterisation, all green. Next lift = 1.2.0:
+    above_contract_minutes, monthly array, possibly Hours-column cross-check
+    and plausibility warnings (see TODO Later).</engine>
+    <website>v1 live on GitHub Pages via .github/workflows/deploy.yml
+    (builds website/ on Node 24, deploys dist/ on push to main). vite base =
+    /nhs-log-hours-db-manager/. Data flow: engine_v2/web_data.json is copied
+    manually to website/public/web_data.json (update.sh will automate).</website>
+    <ingest>scripts/ingest.sh [--accept-drift] [--force-export] [path];
+    HOURS_DOWNLOADS_DIR overrides the default /home/filipejunqueira/downloads;
+    detection is header-based (Date,Start,End,Minutes,Hours,).</ingest>
+  </domain_state>
+
+  <warnings>
+    <warning>The PostToolUse ruff hook REFORMATS ENTIRE .py FILES on
+    Write/Edit. For surgical diffs in audited code (engine_v2), apply
+    patches via Bash-scripted uniqueness-checked replacements, never the
+    Edit tool; this bit us once and the files had to be restored from HEAD.</warning>
+    <warning>cp/rm are aliased interactive in this container: use `command
+    cp -f`, `rm -f`, and redirect stdin from /dev/null in scripts.</warning>
+    <warning>Bash tool cwd persists between calls - running npx vue-tsc
+    from the repo root instead of website/ downloads a broken global copy
+    and fails with ERR_PACKAGE_PATH_NOT_EXPORTED (red herring).</warning>
+    <warning>data/exports/ mixes two naming conventions: the two legacy
+    files are named by EXPORT date, new ingests by LATEST-ENTRY date. Safe
+    because the drift baseline is the canonical CSV, but do not "clean up"
+    the legacy names - they are provenance.</warning>
+    <warning>Engine work for 1.2.0 requires: lift deny rules deliberately
+    (backup settings.json first), every changed byte traces to the change
+    spec, characterisation suite pins updated deliberately with old/new
+    reported, and output-neutrality checked for figures that should not
+    move. Copy this session's discipline (see docs/TODO.md Done log and
+    git history around 76ad636..cbf9543).</warning>
+  </warnings>
+</session_snapshot>
