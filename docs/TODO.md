@@ -6,16 +6,9 @@ reads and propagates; session snapshots should reference it, not duplicate it).
 
 Last updated: 2026-07-19 (session: F1–F6 applied, committed; engine lock restored).
 
-## Now (next session, in order)
+## Now (in order)
 
-1. **Consolidate the audit reports** — parse `logic-audit_2026-07-06.md` (root)
-   and `docs/nhs_hours_logic_audit_2026-07-06.md`, derive which is current and
-   correct, keep one canonical copy in `docs/`, remove or archive the other.
-   General rule adopted: non-config documentation lives in `docs/`.
-
-## Next
-
-2. **`scripts/ingest.sh`** — the CSV intake pipeline (manual trigger for now):
+1. **`scripts/ingest.sh`** — the CSV intake pipeline (manual trigger for now):
    - Find the newest spreadsheet export in the downloads folder (source is an
      Excel file today, exported to CSV by hand; Google Sheets is a possible
      later switch).
@@ -28,7 +21,7 @@ Last updated: 2026-07-19 (session: F1–F6 applied, committed; engine lock resto
    - On acceptance: copy to `engine_v2/data/filipe_working_hours_log.csv`, run
      `scripts/regen.sh`, report figure deltas. Test fixture stays FROZEN —
      re-freezing is a separate deliberate act.
-3. **Website v1** — scaffold `website/` per `docs/WEBSITE_PLAN.md` +
+2. **Website v1** — scaffold `website/` per `docs/WEBSITE_PLAN.md` +
    `docs/BUILD_NOTES.md` (Vite vue-ts, Tailwind v4). Blocked before first
    public deploy on the §7 identity/hosting decision (user).
 
@@ -52,6 +45,12 @@ Last updated: 2026-07-19 (session: F1–F6 applied, committed; engine lock resto
 
 ## Done log
 
+- 2026-07-19 (later still): audit documents consolidated into docs/ — the two
+  "copies" were not duplicates: the root file was the audit REPORT (now
+  docs/logic-audit_2026-07-06.md, moved) and the docs/ file was the PROMPT
+  that commissioned it (renamed docs/logic-audit-prompt_2026-07-06.md).
+  Live references in audit/ repointed. Rule confirmed: non-config
+  documentation lives in docs/.
 - 2026-07-19 (later): session work committed on branch logic-audit-2026-07-06
   as six focused commits (data adoption + fixture, F1 test repoint, F2–F4
   core fixes, F5/F6 docs + audit report, web_data regen, CONTINUATION.md
@@ -65,7 +64,7 @@ Last updated: 2026-07-19 (session: F1–F6 applied, committed; engine lock resto
   F2–F4 verified output-neutral (content hash identical). web_data.json
   regenerated (schema 1.1.0). Known fact: the 06-25 export disagrees with
   later data on 19 June dates — consistent with retro-corrections in the
-  spreadsheet; the drift gate (Next item 2) exists to catch this class of
+  spreadsheet; the drift gate (Now item 1) exists to catch this class of
   change loudly in future.
 - 2026-07-06: logic audit (verdict: arithmetic correct; findings F1–F6 with
   patches; characterisation suite added under audit/).

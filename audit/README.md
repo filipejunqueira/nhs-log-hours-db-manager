@@ -1,7 +1,7 @@
 # audit/ — characterisation tests for the locked hours engine
 
 This directory holds the test suite produced by the 2026-07-06 logic audit of
-`engine_v2/` (report: `/logic-audit_2026-07-06.md`).
+`engine_v2/` (report: `/docs/logic-audit_2026-07-06.md`).
 
 It lives **outside** `engine_v2/` deliberately: the engine is complete, audited
 and locked (`Edit`/`Write` under `engine_v2/**` are denied in

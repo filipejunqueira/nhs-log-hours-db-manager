@@ -2,7 +2,7 @@
 test_characterisation.py -- audit characterisation suite for engine_v2 (2026-07-06)
 ====================================================================================
 
-Companion to /logic-audit_2026-07-06.md. Pins the engine's behaviour on the
+Companion to /docs/logic-audit_2026-07-06.md. Pins the engine's behaviour on the
 FROZEN FIXTURE (tests/fixtures/hours_2026-07-14.csv, 32 days, 1 Jun - 14 Jul 2026)
 and on the AUDIT_BRIEF.md section-3 scenarios not already covered by the
 engine's own 67 checks.
@@ -350,7 +350,7 @@ def test_negative_minutes_value_warns():
     assert any("differs from recomputed" in w for w in res.integrity.warnings)
 
 
-# === defect pins (see logic-audit_2026-07-06.md; these PASS today) ========
+# === defect pins (see docs/logic-audit_2026-07-06.md) =====================
 def test_minutes_inf_ingests_cleanly_after_f2():
     # D1 (FIXED by F2, then reshaped by F4, 2026-07-19): 'inf' in the optional
     # Minutes column used to crash ingest with an uncaught OverflowError.
