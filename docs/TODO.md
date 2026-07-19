@@ -8,20 +8,7 @@ Last updated: 2026-07-19 (session: F1–F6 applied, committed; engine lock resto
 
 ## Now (in order)
 
-1. **`scripts/ingest.sh`** — the CSV intake pipeline (manual trigger for now):
-   - Find the newest spreadsheet export in the downloads folder (source is an
-     Excel file today, exported to CSV by hand; Google Sheets is a possible
-     later switch).
-   - Dry-run validate through the engine BEFORE copying anything into the repo.
-   - Name the export by its latest entry date: `data/exports/hours_export_<latest-work-date>.csv`.
-   - **Drift gate**: diff against the previous export on Date,Start,End,Minutes.
-     Changed HISTORICAL rows (e.g. a corrected past date) must warn and stop
-     for review — user chooses keep-old or adopt-new; the choice is recorded
-     (commit message note). New trailing rows pass silently.
-   - On acceptance: copy to `engine_v2/data/filipe_working_hours_log.csv`, run
-     `scripts/regen.sh`, report figure deltas. Test fixture stays FROZEN —
-     re-freezing is a separate deliberate act.
-2. **Website v1** — scaffold `website/` per `docs/WEBSITE_PLAN.md` +
+1. **Website v1** — scaffold `website/` per `docs/WEBSITE_PLAN.md` +
    `docs/BUILD_NOTES.md` (Vite vue-ts, Tailwind v4). Blocked before first
    public deploy on the §7 identity/hosting decision (user).
 
@@ -45,6 +32,13 @@ Last updated: 2026-07-19 (session: F1–F6 applied, committed; engine lock resto
 
 ## Done log
 
+- 2026-07-19 (evening): scripts/ingest.sh built and sandbox-tested (8
+  scenarios: clean ingest, collision, changed/removed/backfilled historical
+  rows, accept path, idempotent re-run, malformed input). Drift baseline is
+  the CANONICAL CSV (last accepted state), not the newest-named export, so
+  accepted corrections do not re-flag. Flags: --accept-drift, --force-export;
+  env: HOURS_DOWNLOADS_DIR. Detection is header-based (Date,Start,End,
+  Minutes,Hours,...), so unrelated CSVs in downloads are ignored.
 - 2026-07-19 (later still): audit documents consolidated into docs/ — the two
   "copies" were not duplicates: the root file was the audit REPORT (now
   docs/logic-audit_2026-07-06.md, moved) and the docs/ file was the PROMPT
@@ -64,8 +58,8 @@ Last updated: 2026-07-19 (session: F1–F6 applied, committed; engine lock resto
   F2–F4 verified output-neutral (content hash identical). web_data.json
   regenerated (schema 1.1.0). Known fact: the 06-25 export disagrees with
   later data on 19 June dates — consistent with retro-corrections in the
-  spreadsheet; the drift gate (Now item 1) exists to catch this class of
-  change loudly in future.
+  spreadsheet; the drift gate (scripts/ingest.sh) exists to catch this class
+  of change loudly in future.
 - 2026-07-06: logic audit (verdict: arithmetic correct; findings F1–F6 with
   patches; characterisation suite added under audit/).
 - 2026-06-26: engine v2 built, externally audited, locked at schema 1.1.0;
