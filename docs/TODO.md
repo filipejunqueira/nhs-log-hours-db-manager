@@ -4,8 +4,8 @@ Single source of truth for what is done, what is next, and what is parked.
 Update this file as part of every session wrap-up (project-knowledge-updater
 reads and propagates; session snapshots should reference it, not duplicate it).
 
-Last updated: 2026-07-19 (session: F1–F6 committed, lock restored, ingest.sh
-added, website scaffolded).
+Last updated: 2026-07-21 (session: v1.1 components shipped - cross-tab,
+cumulative chart, stats panel; website app version introduced at 1.2.0).
 
 ## Now (in order)
 

@@ -1,0 +1,197 @@
+<session_snapshot>
+  <origin>
+    <project>nhs-hour-log</project>
+    <session_date>2026-07-21</session_date>
+    <session_summary>Planned and built the v1.1 website slice (cross-tab,
+    cumulative chart via Chart.js, stats panel), introduced a website app
+    version (1.2.0) distinct from the engine's schema_version, verified with
+    a real headless-browser render (not just tsc/build), fixed a real bug
+    found during that verification, then committed and pushed to main. User
+    confirmed the live deploy looks correct.</session_summary>
+  </origin>
+
+  <do_not_redo>
+    <item>Chart library decision: Chart.js + vue-chartjs (official Vue 3
+    wrapper), chosen explicitly by the user over a hand-rolled SVG. Do not
+    revisit unless the user raises it.</item>
+    <item>Test-claim gap (docs/TODO.md's "unit-tested 11 cases" claim for
+    useHoursData's schema gate is NOT backed by any code - no test
+    framework exists in website/): user explicitly decided to flag-only,
+    fix later. Do NOT add vitest/tests and do NOT reword the original
+    2026-07-19 Done-log claim as part of routine work - a note was added
+    to Later/parked instead. Only touch this if the user asks.</item>
+    <item>CrossTab has no totals row/column - deliberately minimal per
+    WEBSITE_PLAN §4's "start minimal" instruction. Trivial to add later if
+    the user wants it, but not a gap to "fix" unasked.</item>
+    <item>Website version (package.json / __APP_VERSION__) is a DIFFERENT
+    number from the engine's schema_version (currently 1.1.0). Never
+    conflate the two or bump one when asked to bump the other.</item>
+    <item>Playwright/Chromium is now available for real browser
+    verification in this container (see domain_state) - required a one-time
+    sudo pacman install of missing shared libs. Don't re-diagnose the
+    libatk-1.0.so.0 error if it recurs; just re-run the same install.</item>
+  </do_not_redo>
+
+  <decisions_made>
+    <decision topic="chart-library">
+      <what>Chart.js + vue-chartjs for CumulativeChart.vue.</what>
+      <why>User's explicit choice over a hand-rolled SVG when asked; adds
+      the project's first non-Vue/Tailwind/Vite dependency.</why>
+    </decision>
+    <decision topic="test-claim-gap">
+      <what>Leave a "check later" note in docs/TODO.md Later/parked;
+      do not fix the wording or add real tests now.</what>
+      <why>User's explicit choice when asked; kept this slice's scope to
+      exactly the three components plus the two follow-on requests.</why>
+    </decision>
+    <decision topic="website-versioning">
+      <what>Introduce a website app version, independent of the engine's
+      schema_version. Bumped to 1.2.0 (package.json), single source of
+      truth read by vite.config.ts and injected as build-time constant
+      __APP_VERSION__, shown in the page footer ("Website v1.2.0 · Schema
+      1.1.0 · ...").</what>
+      <why>User request, made after approving the v1.1 plan: "bump the
+      version to 1.2 ... a good idea to put a footnote in the website that
+      this is vX.Y of the website ... easier to just glance and see what
+      version is live."</why>
+    </decision>
+    <decision topic="deploy-model">
+      <what>This repo has no staging/preview deploy - push to main IS the
+      deploy trigger (.github/workflows/deploy.yml). Local check (npm run
+      dev/preview) happens before commit+push, not after.</what>
+      <why>Clarified for the user when they initially assumed a
+      deploy-then-check-then-commit order that doesn't match this repo's
+      actual CI wiring.</why>
+    </decision>
+  </decisions_made>
+
+  <current_state>
+    <item>Branch main == origin/main at 6b98f8e (pushed and confirmed by
+    user: build succeeded, footer shows v1.2, new sections render). One
+    further tiny docs fix is UNCOMMITTED as of this snapshot - see
+    warnings.</item>
+    <item>website/package.json version is 1.2.0. Engine's web_data.json
+    schema_version is still 1.1.0, unrelated, untouched.</item>
+    <item>Three new components live: CrossTab.vue, CumulativeChart.vue,
+    StatsPanel.vue, wired into App.vue after IntegrityPanel, in that order.</item>
+    <item>New dependencies in website/package.json: chart.js, vue-chartjs.
+    No other new dependencies.</item>
+    <item>plan.md STATUS: EXECUTED 2026-07-21 (this slice). Old v1 plan
+    archived at notes/plans/2026-07-19_website-v1-components.md; this
+    session's plan.md itself still needs archiving at the next wrap-up
+    (per convention, dated notes/plans/2026-07-21_website-v1.1-components.md
+    or similar - not yet done).</item>
+    <item>docs/TODO.md: "Now" list re-numbered (v1.1 components item
+    removed, the two remaining items - website improvements / monthly
+    &amp; unpaid-hours, and scripts/update.sh - shifted to 1 and 2). Done log
+    has a new 2026-07-21 entry. Later/parked has the new test-claim-gap
+    note. "Last updated" header line corrected to 2026-07-21 - this edit is
+    the one UNCOMMITTED change, see warnings.</item>
+    <item>Playwright is installed only in a scratch npm project at
+    $CLAUDE_JOB_DIR/tmp/pw-scratch from the PRIOR session's job directory -
+    this is job-scoped temp storage and will not persist/be available in a
+    future session's job dir. The system libraries installed via pacman
+    (at-spi2-core, gtk3, nss, alsa-lib, libxkbcommon-x11) DO persist (system
+    level), but Chromium itself is cached at
+    ~/.cache/ms-playwright/ and playwright itself is NOT a website/ or repo
+    dependency - a future session wanting to browser-test again will need
+    to either re-run `npx playwright install chromium` (libs are cached, so
+    the download-only path should work) and set up its own scratch
+    npm-install-playwright directory, or (better) ask the user if
+    playwright should become a proper devDependency this time instead of a
+    throwaway scratch install.</item>
+  </current_state>
+
+  <next_steps>
+    <step priority="1">Commit and push the one remaining uncommitted change
+    (docs/TODO.md's "Last updated" header line, corrected to 2026-07-21) -
+    trivial one-line docs fix, was pending explicit user confirmation before
+    this session ended. Ask the user first (a fresh session should not just
+    push without asking, per this project's/user's standing discipline).</step>
+    <step priority="2">See docs/TODO.md Now list for the next substantive
+    work: item 1 is "website improvements" (per-month breakdown, unpaid-hours
+    tracking) - both need a fresh plan-gate and both likely require engine
+    schema 1.2.0 (a DELIBERATE lock-lift on engine_v2/, currently locked/
+    denied in .claude/settings.json - do not lift it casually). Item 2 is
+    scripts/update.sh automation (BUILD_NOTES §5 caveats).</step>
+    <step priority="3">Archive this session's plan.md to notes/plans/
+    (dated) once the next slice's planning starts, per the project's own
+    plan-archiving convention (see do_not_redo/current_state above).</step>
+  </next_steps>
+
+  <files_touched>
+    <file action="created" path="website/src/components/CrossTab.vue">band × class matrix, minutesToHours on all cells</file>
+    <file action="created" path="website/src/components/CumulativeChart.vue">Chart.js line chart over content.cumulative</file>
+    <file action="created" path="website/src/components/StatsPanel.vue">content.statistics, applies BUILD_NOTES §3 field→formatter map incl. both traps</file>
+    <file action="created" path="website/src/vite-env.d.ts">ambient declare const __APP_VERSION__: string</file>
+    <file action="modified" path="website/src/lib/format.ts">minuteToClock now rounds first (bug fix - mean_start/end_minute are non-integer)</file>
+    <file action="modified" path="website/src/App.vue">imports + wires the 3 new components after IntegrityPanel; footer now shows "Website v{{ appVersion }}"</file>
+    <file action="modified" path="website/vite.config.ts">reads package.json version, defines __APP_VERSION__ at build time</file>
+    <file action="modified" path="website/package.json">version 0.0.0 → 1.2.0; added chart.js, vue-chartjs deps</file>
+    <file action="modified" path="website/package-lock.json">lockfile for the two new deps</file>
+    <file action="modified" path="plan.md">rewritten for the v1.1 slice, then marked EXECUTED 2026-07-21</file>
+    <file action="created" path="notes/plans/2026-07-19_website-v1-components.md">archived the prior (v1) EXECUTED plan before overwriting plan.md</file>
+    <file action="modified" path="docs/TODO.md">v1.1 item moved to Done log with detail; test-claim-gap note added to Later/parked; Now list renumbered; header line corrected (THIS LAST EDIT IS UNCOMMITTED)</file>
+  </files_touched>
+
+  <files_to_read>
+    <file path="docs/TODO.md">the ledger - start here; one uncommitted line pending (see warnings)</file>
+    <file path="plan.md">this session's EXECUTED plan, full success-criteria detail for what was built</file>
+    <file path="docs/WEBSITE_PLAN.md">§4 (v1.1 spec, now done) and whatever section covers the next Now item</file>
+    <file path="docs/BUILD_NOTES.md">§3 field→formatter map - load-bearing for any future stats/data-display work, has the trap categories (clocks vs durations vs counts vs percentages)</file>
+    <file path="website/src/lib/format.ts">now includes the minuteToClock rounding fix; the only arithmetic surface</file>
+  </files_to_read>
+
+  <domain_state>
+    <website>App version 1.2.0 (website/package.json), independent of the
+    engine's schema_version (1.1.0, in web_data.json). Nine components now:
+    six v1 (SummaryHeader, TotalsPanel, WeeklyTable, DailyTable,
+    MethodologyPanel, IntegrityPanel) + three v1.1 (CrossTab,
+    CumulativeChart, StatsPanel). Dependencies: vue, tailwindcss,
+    @tailwindcss/vite, chart.js, vue-chartjs. Deployed via
+    .github/workflows/deploy.yml on push to main - NO separate staging;
+    local npm run dev/preview is the only pre-deploy check available.</website>
+    <verification-tooling>Playwright (chromium-headless-shell) is now
+    launchable in this container after `sudo pacman -S at-spi2-core gtk3
+    nss alsa-lib libxkbcommon-x11` (was missing libatk-1.0.so.0 and
+    friends). Browser binary cached at ~/.cache/ms-playwright/. Playwright
+    itself was installed via a THROWAWAY scratch npm project outside the
+    repo (this session's $CLAUDE_JOB_DIR/tmp/pw-scratch), specifically to
+    avoid adding a test-tooling dependency to website/package.json without
+    being asked. A future session needing this again should either repeat
+    the scratch-install pattern or ask the user whether to formalise it.</verification-tooling>
+    <engine>Unchanged this session. Schema 1.1.0, locked (deny rules
+    active in .claude/settings.json). Next lift = 1.2.0 (see docs/TODO.md
+    Later/parked) - still a future, deliberate, separately-planned change.</engine>
+  </domain_state>
+
+  <warnings>
+    <warning>ONE FILE IS UNCOMMITTED as of this snapshot:
+    docs/TODO.md's "Last updated" header line was corrected from 2026-07-19
+    to 2026-07-21 AFTER the v1.1 commit (6b98f8e) had already been pushed.
+    It was a one-line docs fix caught by the session-snapshot skill's own
+    audit step, done too late to fold into that commit. Confirm with the
+    user before committing/pushing it - do not push silently in a fresh
+    session without asking, even though it's trivial.</warning>
+    <warning>The Bash tool's cwd does NOT reliably persist a `cd` across
+    tool calls in the way you'd expect from a single shell - each Bash
+    invocation in this environment can reset to the repo root ("Shell cwd
+    was reset to ..." was observed mid-session). Always `cd` explicitly (or
+    use an absolute path) at the start of every command that depends on
+    being inside website/, rather than relying on a prior `cd` having
+    stuck.</warning>
+    <warning>This project has NO ESLint/Prettier/PostToolUse hook for
+    website/ TypeScript/Vue files (confirmed: no eslint/prettier in
+    package.json, no hook in .claude/settings.json). Unlike engine_v2's
+    ruff hook, multi-step edits to .vue/.ts files are safe to split across
+    tool calls without the "add usage before import lands" hazard - but
+    don't assume this generalises to other projects.</warning>
+    <warning>gh CLI is not installed in this container - cannot check
+    GitHub Actions run status directly from the shell. Verification of the
+    actual deploy currently depends on the user checking the live URL
+    themselves (they did, this session, and confirmed it looks correct).</warning>
+    <warning>vue-tsc / npm build commands MUST run from website/, not repo
+    root (repeated from the prior snapshot - still true, still easy to get
+    wrong via the cwd-reset issue above).</warning>
+  </warnings>
+</session_snapshot>
