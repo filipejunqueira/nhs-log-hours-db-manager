@@ -5,10 +5,14 @@ export function minutesToHours(min: number): string {
   return (min / 60).toFixed(2)
 }
 
-/** Minutes-from-midnight → "HH:MM" clock string. */
+/** Minutes-from-midnight → "HH:MM" clock string. Rounds to the nearest
+ *  minute first: mean_start_minute/mean_end_minute (statistics) are
+ *  non-integer averages, unlike the integer start_minute/end_minute on
+ *  individual days. */
 export function minuteToClock(min: number): string {
-  const h = Math.floor(min / 60)
-  const m = min % 60
+  const rounded = Math.round(min)
+  const h = Math.floor(rounded / 60)
+  const m = rounded % 60
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`
 }
 

@@ -9,16 +9,14 @@ added, website scaffolded).
 
 ## Now (in order)
 
-1. **v1.1 components** (cross-tab, cumulative chart, stats panel) — data
-   already in the JSON; additive, per WEBSITE_PLAN §4.
-2. **Website improvements** (user request 2026-07-19, needs planning + a
+1. **Website improvements** (user request 2026-07-19, needs planning + a
    plan-gate; both likely need engine schema 1.2.0 since aggregation belongs
    in the engine, not the browser):
    - per-MONTH breakdown (candidate: engine emits a `monthly` array
      mirroring `weekly`);
    - "hours not yet paid by payroll" (needs a paid-up-to marker as input —
      where does the user record what payroll has processed? Design question).
-3. **scripts/update.sh** — the full export → ingest → copy to
+2. **scripts/update.sh** — the full export → ingest → copy to
    website/public → commit/push chain (BUILD_NOTES §5 caveats: headless
    xlsx→csv, non-interactive git auth, surfaced failures).
 
@@ -43,9 +41,27 @@ added, website scaffolded).
   characterisation suite's own docstring (cosmetic; run command shown is wrong).
 - Start using `notes/snapshots/` in this repo (end sessions with
   /session-wrapup) so snapshot-restore finds snapshots without guesswork.
+- **Unverified test claim**: the 2026-07-19 Done-log entry below says
+  useHoursData's schema gate was "unit-tested 11 cases," but no test
+  framework or test file exists anywhere in `website/` (no vitest,
+  no `@vue/test-utils`, no `*.spec.*`/`*.test.*`). Actual verification was
+  manual (`vite preview` + curl against a hand-crafted bad-schema fixture).
+  Reconcile the wording, or add real tests, later (flagged 2026-07-21).
 
 ## Done log
 
+- 2026-07-21: v1.1 components shipped — CrossTab, CumulativeChart (chart.js +
+  vue-chartjs, user-decided over a hand-rolled SVG), StatsPanel, wired into
+  App.vue after IntegrityPanel. Bug caught in verification: `minuteToClock`
+  assumed integer minutes; `mean_start_minute`/`mean_end_minute` are
+  non-integer averages, so it was fixed to round first. Website app version
+  introduced (distinct from the engine's schema_version): package.json
+  1.2.0, injected at build time via `vite.config.ts` → `__APP_VERSION__`,
+  shown in the page footer. Verified: vue-tsc clean, build passes, grep
+  audit clean, headless-browser render (Playwright + Chromium, installed
+  locally for this) cross-checked every new value against the raw JSON,
+  user eyeballed a full-page screenshot. Pushed to main for GitHub Actions
+  to deploy; live-site check is the user's own next step.
 - 2026-07-19 (SITE LIVE): pushed to git@github.com:filipejunqueira/
   nhs-log-hours-db-manager.git over SSH (§7 decided by user: public repo +
   public Pages). vite base fixed to /nhs-log-hours-db-manager/. deploy.yml

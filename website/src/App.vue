@@ -6,8 +6,12 @@ import WeeklyTable from './components/WeeklyTable.vue'
 import DailyTable from './components/DailyTable.vue'
 import MethodologyPanel from './components/MethodologyPanel.vue'
 import IntegrityPanel from './components/IntegrityPanel.vue'
+import CrossTab from './components/CrossTab.vue'
+import CumulativeChart from './components/CumulativeChart.vue'
+import StatsPanel from './components/StatsPanel.vue'
 
 const { data, loading, error } = useHoursData()
+const appVersion = __APP_VERSION__
 </script>
 
 <template>
@@ -31,10 +35,13 @@ const { data, loading, error } = useHoursData()
         <DailyTable :data="data" />
         <MethodologyPanel :data="data" />
         <IntegrityPanel :data="data" />
+        <CrossTab :data="data" />
+        <CumulativeChart :data="data" />
+        <StatsPanel :data="data" />
       </div>
       <footer class="mt-10 border-t border-gray-200 pt-4 text-xs text-gray-500">
-        Schema {{ data.meta.schema_version }} · all durations recorded in integer minutes ·
-        this page shows hours only; rates and pay are determined separately.
+        Website v{{ appVersion }} · Schema {{ data.meta.schema_version }} · all durations recorded
+        in integer minutes · this page shows hours only; rates and pay are determined separately.
       </footer>
     </template>
   </main>
