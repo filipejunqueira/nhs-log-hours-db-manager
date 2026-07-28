@@ -1,11 +1,19 @@
 <script setup lang="ts">
 import type { WebData } from '../types/web-data'
-import { minutesToHours, minuteToClock, labelForBand, labelForClass } from '../lib/format'
+import {
+  minutesToHours,
+  minuteToClock,
+  formatPercent,
+  labelForBand,
+  labelForClass,
+  BANDS,
+  CLASSES,
+} from '../lib/format'
 
 const props = defineProps<{ data: WebData }>()
 
-const bands = ['contracted', 'additional', 'overtime'] as const
-const classes = ['daytime', 'weekday_night', 'saturday', 'sunday', 'bank_holiday'] as const
+const bands = BANDS
+const classes = CLASSES
 const stats = props.data.content.statistics
 </script>
 
@@ -27,7 +35,7 @@ const stats = props.data.content.statistics
         <tbody>
           <tr v-for="b in bands" :key="b" class="border-b border-gray-100">
             <td class="py-1.5">{{ labelForBand(b) }}</td>
-            <td class="py-1.5 text-right tabular-nums">{{ stats.pct_by_band[b] }}%</td>
+            <td class="py-1.5 text-right tabular-nums">{{ formatPercent(stats.pct_by_band[b]) }}</td>
           </tr>
         </tbody>
       </table>
@@ -45,7 +53,7 @@ const stats = props.data.content.statistics
         <tbody>
           <tr v-for="c in classes" :key="c" class="border-b border-gray-100">
             <td class="py-1.5">{{ labelForClass(c) }}</td>
-            <td class="py-1.5 text-right tabular-nums">{{ stats.pct_by_class[c] }}%</td>
+            <td class="py-1.5 text-right tabular-nums">{{ formatPercent(stats.pct_by_class[c]) }}</td>
           </tr>
         </tbody>
       </table>

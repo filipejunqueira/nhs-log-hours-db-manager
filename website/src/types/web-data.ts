@@ -1,8 +1,13 @@
 // Types mirroring engine_v2/web_data.json (schema 1.1.0).
 // Source of truth is the engine output; these track it.
 
-export type Band = "contracted" | "additional" | "overtime"
-export type UnsocialClass = "daytime" | "weekday_night" | "saturday" | "sunday" | "bank_holiday"
+// Band and UnsocialClass derive from the BANDS/CLASSES arrays in lib/format.ts
+// so the key names exist in exactly one place. `import type` keeps this module
+// erased at compile time — it emits no runtime JavaScript.
+import type { BANDS, CLASSES } from "../lib/format"
+
+export type Band = (typeof BANDS)[number]
+export type UnsocialClass = (typeof CLASSES)[number]
 export type DayTypeName = "weekday" | "saturday" | "sunday" | "bank_holiday"
 export type ByBand = Record<Band, number>
 export type ByClass = Record<UnsocialClass, number>

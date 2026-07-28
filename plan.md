@@ -1,118 +1,111 @@
-# Plan: Website v1.1 components (cross-tab, cumulative chart, stats panel)
+# Plan: act on the v1.1 code-review findings
 
-STATUS: EXECUTED 2026-07-21 — all three components built, wired, and verified
-(vue-tsc clean, build passes, grep audit clean, headless-browser render
-cross-checked against raw JSON, user eyeballed the screenshot). The previous
-plan (v1 six panels) is archived at
-notes/plans/2026-07-19_website-v1-components.md; this one archives at the
+STATUS: EXECUTED 2026-07-28 — all seven changes made and verified (real type
+check clean, build passes, grep audit clean, compile-time enforcement proven by
+a deliberate break, three-fixture headless-browser check). The previous plan
+(v1.1 components) is archived at
+notes/plans/2026-07-21_website-v1.1-components.md; this one archives at the
 next session wrap-up.
 
 ## Context
 
-WEBSITE_PLAN §4 marks cross-tab, cumulative-trend-chart, and stats/distribution
-as the v1.1 slice: all three read fields already present in the live
-engine_v2/web_data.json (schema 1.1.0) — `content.cross_tab`,
-`content.cumulative`, `content.statistics` — so this is purely additive, no
-engine change. It is the top "Now" item in docs/TODO.md. v1 (six panels) is
-live and verified on GitHub Pages.
+A code review of the v1.1 commit (6b98f8e) found six issues; all six were
+checked against the source and all six were real.
 
-Two decisions were open and are now resolved by the user (2026-07-21):
-- **Charting**: Chart.js (not a hand-rolled SVG). This is a new dependency —
-  the first non-Vue/Tailwind/Vite dependency in `website/`.
-- **Test-claim gap**: docs/TODO.md's 2026-07-19 Done-log entry claims
-  useHoursData's schema gate was "unit-tested 11 cases," but no test
-  framework or test file exists anywhere in `website/` (confirmed via grep/
-  find — no vitest, no `@vue/test-utils`, no `*.spec.*`/`*.test.*` files).
-  Actual verification was manual (`vite preview` + curl against a
-  hand-crafted bad-schema fixture, per plan.md's own v1 verification section).
-  Decision: leave a note for later, do not fix the wording or add tests now.
+The one that mattered: the page checked the **schema version** of
+web_data.json and nothing else, and the band/class key names were written out
+by hand in five separate places (three components plus the two label maps in
+format.ts). Because the version gate accepts any 1.x with minor >= 1, a future
+engine release adding a clock class would load fine and silently drop a
+column — leaving the cross-tab rows no longer adding up to the totals printed
+directly above them. Silently wrong numbers on a page whose whole purpose is
+being checkable by payroll. The mirror failure: a missing block threw inside a
+component and blanked the page instead of using the error panel App.vue
+already had.
+
+User decisions taken before execution (2026-07-28):
+- Unrecognised keys → **render what is understood, warn visibly**. Explicitly
+  NOT a hard refusal: a future engine release must not be able to take the
+  live page down.
+- All six findings in scope, nits included.
+- Playwright → scratch install outside the repo again, not a dev dependency.
+- No vitest, no test framework. That remains parked.
 
 ## Success criteria
 
-1. Three new presentational components, each following the existing pattern
-   (single `defineProps<{ data: WebData }>()`, `<script setup lang="ts">`, no
-   shared base component, importing only the specific `format.ts` helpers
-   used):
-   - **`CrossTab.vue`** — band × unsocial-class matrix from
-     `content.cross_tab: Record<Band, ByClass>`. All cell values are
-     durations → `minutesToHours`. Rows = bands, columns = classes,
-     `labelForBand`/`labelForClass` for headers. No totals row/column added
-     (WEBSITE_PLAN §4 says "a small matrix"; keeping v1.1 minimal per its own
-     "start minimal" instruction — trivial to add later if wanted).
-   - **`CumulativeChart.vue`** — line chart of `content.cumulative`
-     (`{date, cumulative_minutes}[]`, 32 points, pre-computed, monotonic)
-     via **chart.js + vue-chartjs** (the official Vue 3 wrapper — avoids
-     hand-written canvas/lifecycle boilerplate; still "Chart.js" per your
-     decision, just without re-deriving mount/unmount/resize handling by
-     hand). The component passes the raw `cumulative_minutes` values to
-     Chart.js for plotting; the only browser-side conversion is
-     `minutesToHours` for axis/tooltip labels. No client-side recomputation
-     of the running total, no re-sorting, no interpolation of missing dates.
-   - **`StatsPanel.vue`** — `content.statistics`, applying the BUILD_NOTES §3
-     field→formatter map exactly, including its two named traps:
-     - `pct_by_band` / `pct_by_class` — already percentages, append `%`, no
-       division.
-     - `mean_minutes_per_day` / `mean_minutes_per_week` — durations →
-       `minutesToHours`.
-     - `mean_start_minute` / `mean_end_minute` — **clocks, not durations** →
-       `minuteToClock`, despite the "mean_minutes"-adjacent naming.
-     - `longest_day` / `shortest_day` — date + `minutesToHours`.
-     - `days_touching_class` — **raw counts, not minutes** → render as-is,
-       despite sharing the `ByClass` shape with the minute blocks.
-2. Wired into `App.vue` as new siblings after the existing six panels, in the
-   order WEBSITE_PLAN §10 step 9 gives: cross-tab, chart, stats.
-3. `chart.js` + `vue-chartjs` added to `website/package.json` — the only new
-   dependencies. No other new dependencies.
-4. No change to `useHoursData`, any existing `format.ts` export,
-   `types/web-data.ts`, or any v1 component — purely additive.
-5. No `engine_v2` change; no change to `public/web_data.json` contents
-   (fields already present at schema 1.1.0).
-6. `docs/TODO.md` gets one added line, in Later/parked: a note that the
-   2026-07-19 "unit-tested 11 cases" Done-log claim is unverified against
-   the actual codebase (no test framework present) and should be reconciled
-   (reworded or backed with real tests) later — explicitly out of scope here.
-7. **Website app version** (added 2026-07-21, user request): a version
-   number for the *website app* itself — distinct from and unrelated to the
-   engine's locked `schema_version` (currently 1.1.0 in web_data.json, never
-   touched here). `website/package.json` `"version"` bumped from the untouched
-   Vite-scaffold default `"0.0.0"` to `"1.2.0"`. Single source of truth:
-   `vite.config.ts` reads it from `package.json` and injects it as a build-time
-   constant (`__APP_VERSION__`); no duplicated version string anywhere.
-8. **Version footnote** (same request): a small `<footer>` in `App.vue`
-   showing "Website v1.2.0" — muted text, consistent with the existing design
-   register (no new colours/fonts/trackers). Purely a label; not derived from
-   or interacting with any hours figure.
+1. Band and clock-class names exist in exactly one place, and the compiler
+   rejects adding a key there without a display label. **Met** — proven by
+   deliberately adding a fourth band: `vue-tsc -b` fails with TS2741.
+2. Unrecognised band/class key → every recognised column still renders, above
+   a visible warning naming the unrecognised one. **Met.**
+3. A missing content block → the existing "could not load" panel, never a
+   blank page. **Met.**
+4. Real data → no banner, page unchanged from before. **Met.**
+5. Percentage columns show a consistent number of decimals. **Met** —
+   "0.90%" / "0.00%" where it previously read "0.9%" / "0%".
+6. The running total is available to a screen reader. **Met** — sr-only
+   summary; it appears in no table anywhere on the page.
+7. `/ 60` appears only in src/lib/format.ts. **Met.**
 
-## Steps
+## Changes
 
-1. `npm install chart.js vue-chartjs` in `website/`.
-2. `CrossTab.vue` — semantic `<table>`/`<caption>`, `tabular-nums` on cells,
-   consistent with existing panel styling.
-3. `CumulativeChart.vue` — `<Line>` component from vue-chartjs bound to a
-   dataset built from `content.cumulative`; y-axis/tooltip callback formats
-   via `minutesToHours`.
-4. `StatsPanel.vue` — table/definition-list consistent with existing panels,
-   the field→formatter map applied per success criterion 1.
-5. Wire all three into `App.vue` after `IntegrityPanel`, in cross-tab →
-   chart → stats order.
-6. Add the one-line note to `docs/TODO.md` Later/parked (success criterion 6).
-7. Bump `website/package.json` version to `1.2.0`; wire `vite.config.ts` to
-   read it and `define` `__APP_VERSION__`; add the ambient type declaration.
-8. Add the version footer to `App.vue`.
+All under website/. No engine change; web_data.json contents untouched.
+
+1. **src/lib/format.ts** — added `BANDS` and `CLASSES` const arrays as the
+   single source of the key names. Label maps retyped as
+   `Record<(typeof BANDS)[number], string>`, which is what makes criterion 1
+   a compile error rather than a convention. Added `formatPercent` (no
+   arithmetic — the engine already emits percentages) and
+   `minutesToHoursValue` (minutes → hours as a number, for plotting only).
+2. **src/types/web-data.ts** — `Band` / `UnsocialClass` now derive from those
+   arrays via `import type`, so the module still emits no runtime JavaScript.
+3. **TotalsPanel.vue, CrossTab.vue, StatsPanel.vue** — dropped their local
+   copies of the arrays; import `BANDS` / `CLASSES` instead.
+4. **src/lib/validate.ts** (new) — `checkData` returns `{ fatal, warnings }`.
+   Fatal: any of period/totals/weekly/daily/cross_tab/cumulative/statistics/
+   integrity absent. Warnings: band or class keys present in the data but not
+   in BANDS/CLASSES, or expected keys absent.
+5. **useHoursData.ts / App.vue** — the check runs after the version gate; a
+   fatal result throws into the existing error panel, warnings surface as a
+   new amber banner above the page.
+6. **StatsPanel.vue** — the two share columns go through `formatPercent`.
+7. **CumulativeChart.vue** — plots hours rather than minutes, so Chart.js
+   picks round-hour ticks (the axis read 33.33 h / 66.67 h before, and 33 h /
+   67 h when only the label was rounded; it now reads 0/50/100/…/300 h).
+   Tooltip still formats from the original minutes via `minutesToHours`, so
+   the exact figure comes from format.ts. Added the sr-only summary. Moved
+   the props read inside the `computed`, which previously could never
+   recompute — the snapshot pattern in the other eight components is
+   deliberate and untouched.
+8. **package.json 1.2.0 → 1.3.0** (behaviour changed: the new banner), and
+   package-lock.json's two root `"version"` fields hand-edited to match.
+   Deliberately not `npm install`, which would re-resolve the caret ranges
+   and could pull dependency updates into a deployed site as a side effect of
+   a cosmetic fix.
 
 ## Verification
 
-- `npx vue-tsc --noEmit` clean; `npm run build` passes (run from `website/`).
-- Grep audit: minute-arithmetic (`/ 60`, etc.) still appears only in
-  `src/lib/format.ts` — the new components call existing format.ts exports,
-  they don't inline conversions.
-- Manual check against raw `web_data.json`: `mean_start_minute` /
-  `mean_end_minute` render as HH:MM (not decimal hours); `days_touching_class`
-  renders as plain integers (not hours) — the two BUILD_NOTES §3 traps.
-- `vite preview` + eyeball: cross-tab matrix values are consistent with
-  `content.totals.minutes_by_band` / `minutes_by_class` sums (checked by eye,
-  not computed in-app); chart renders 32 points ending at 16 808 min /
-  280.13 h; stats panel percentages are sane (~100% within band, ~100%
-  within class).
-- User eyeball via `npm run dev` for the chart's visual look and overall
-  page composition — final sign-off is the user's, per project convention.
+Run from website/ — the shell working directory resets between commands here,
+so use an explicit cd every time.
+
+- `npx vue-tsc -b --force` — clean. **Note: `npx vue-tsc --noEmit` checks zero
+  files** in this project, because the root tsconfig.json is a references-only
+  solution file (`"files": []`). It always exits 0 and proves nothing. The
+  real check is `-b`, which is what `npm run build` runs.
+- `npm run build` — passes.
+- `grep -rn "/ 60" src/` — hits only in src/lib/format.ts. Also checked that
+  no `toFixed` appears outside format.ts.
+- Deliberate break: adding a fourth band to `BANDS` without a label fails
+  `vue-tsc -b` with TS2741. Restored afterwards.
+- Headless browser (scratch Playwright install outside the repo) against three
+  data files served through `vite preview`, checking the rendered DOM:
+  - real data → no banner, no error panel, footer "Website v1.3.0", shares
+    read 50.74/27.01/22.25 and 93.43/0.90/0.00/5.67/0.00, days-touching still
+    plain integers 30/3/0/2/0, mean start 08:31 / end 17:16, no page errors;
+  - a fixture with an extra "night_premium" clock class → banner names it, all
+    recognised columns still render, no page errors;
+  - a fixture with the statistics block deleted → error panel with a message
+    naming the missing block, not a blank page.
+  Fixtures lived outside the repo; dist/web_data.json restored afterwards and
+  confirmed identical to public/web_data.json.
+- User eyeball on the chart axis and banner styling.

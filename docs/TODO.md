@@ -4,8 +4,8 @@ Single source of truth for what is done, what is next, and what is parked.
 Update this file as part of every session wrap-up (project-knowledge-updater
 reads and propagates; session snapshots should reference it, not duplicate it).
 
-Last updated: 2026-07-21 (session: v1.1 components shipped - cross-tab,
-cumulative chart, stats panel; website app version introduced at 1.2.0).
+Last updated: 2026-07-28 (session: code-review follow-ups on the v1.1
+components; data shape check added; website app version 1.3.0).
 
 ## Now (in order)
 
@@ -50,6 +50,23 @@ cumulative chart, stats panel; website app version introduced at 1.2.0).
 
 ## Done log
 
+- 2026-07-28: code-review follow-ups on the v1.1 components (website 1.3.0).
+  Band and clock-class key names now live in one place (`BANDS`/`CLASSES` in
+  format.ts) instead of five, with the label maps typed against them so a key
+  added without a label is a compile error — verified by deliberately breaking
+  it. New `lib/validate.ts` checks the data's shape, not just its version
+  number: a missing content block now reaches the existing error panel instead
+  of blanking the page, and a band or clock class the page does not recognise
+  renders everything it does understand above an amber banner (user decision:
+  warn, never refuse — a future engine release must not be able to take the
+  live page down). Percentage columns go through one formatter (0.90% / 0.00%,
+  previously 0.9% / 0%). Cumulative chart plots hours rather than minutes so
+  the axis reads 0/50/…/300 h, and gained a screen-reader summary — the
+  running total appears in no table on the page. Verified: `vue-tsc -b` clean,
+  build passes, grep audit clean, three-fixture headless-browser check (real
+  data / unknown class / missing block). **Gotcha recorded: `npx vue-tsc
+  --noEmit` checks ZERO files here** — the root tsconfig.json is a
+  references-only solution file, so it always exits 0. Use `vue-tsc -b`.
 - 2026-07-21: v1.1 components shipped — CrossTab, CumulativeChart (chart.js +
   vue-chartjs, user-decided over a hand-rolled SVG), StatsPanel, wired into
   App.vue after IntegrityPanel. Bug caught in verification: `minuteToClock`

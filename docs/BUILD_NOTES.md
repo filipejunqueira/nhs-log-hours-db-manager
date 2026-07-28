@@ -48,3 +48,14 @@ For the daily cron to be real:
     silently stops updating.
   - One-time: set GitHub Pages source to "GitHub Actions" in repo settings, or deploy.yml won't
     publish.
+
+## 6. `vue-tsc --noEmit` checks NOTHING here (added 2026-07-28)
+website/tsconfig.json is a references-only solution file (`"files": []`, references to
+tsconfig.app.json and tsconfig.node.json). `npx vue-tsc --noEmit` therefore type-checks zero
+files and always exits 0 — it is not a check, and any session claiming "vue-tsc clean" from it
+has verified nothing. Use `npx vue-tsc -b` (add `--force` to bypass the incremental cache),
+which is what `npm run build` runs. Confirmed 2026-07-28: with a band added to `BANDS` and no
+matching label (a genuine type error), `--noEmit` exited 0 while `-b --force` failed with TS2741.
+
+Also: run every npm/vue-tsc command from website/ with an explicit `cd` in the same command.
+The shell working directory resets between tool calls in this environment.

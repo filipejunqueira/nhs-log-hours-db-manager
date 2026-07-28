@@ -10,7 +10,7 @@ import CrossTab from './components/CrossTab.vue'
 import CumulativeChart from './components/CumulativeChart.vue'
 import StatsPanel from './components/StatsPanel.vue'
 
-const { data, loading, error } = useHoursData()
+const { data, loading, error, warnings } = useHoursData()
 const appVersion = __APP_VERSION__
 </script>
 
@@ -28,6 +28,19 @@ const appVersion = __APP_VERSION__
     </div>
 
     <template v-else-if="data">
+      <div
+        v-if="warnings.length"
+        class="mb-8 rounded border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900"
+        role="alert"
+      >
+        <p class="font-semibold">
+          This page does not fully understand the data it was given.
+        </p>
+        <ul class="mt-1 list-disc space-y-1 pl-5">
+          <li v-for="w in warnings" :key="w">{{ w }}</li>
+        </ul>
+      </div>
+
       <SummaryHeader :data="data" />
       <div class="mt-10 space-y-10">
         <TotalsPanel :data="data" />

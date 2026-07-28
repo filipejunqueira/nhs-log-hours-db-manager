@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import type { WebData } from '../types/web-data'
-import { minutesToHours, labelForBand, labelForClass } from '../lib/format'
+import { minutesToHours, labelForBand, labelForClass, BANDS, CLASSES } from '../lib/format'
 
 const props = defineProps<{ data: WebData }>()
 
-const bands = ['contracted', 'additional', 'overtime'] as const
-const classes = ['daytime', 'weekday_night', 'saturday', 'sunday', 'bank_holiday'] as const
+const bands = BANDS
+const classes = CLASSES
 const totals = props.data.content.totals
 </script>
 
