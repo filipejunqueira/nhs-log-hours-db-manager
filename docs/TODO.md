@@ -82,7 +82,13 @@ copies to website/public, exports archived under collision-proof names).
   added: runs ingest.sh then checks the result (published copy matches the
   engine, integrity clean, export named correctly, frozen fixture and engine
   code untouched). Never commits or pushes — prints the commands and stops.
-  On a stop it says exactly what did and did not move.
+  On a stop it says exactly what did and did not move. (e) `scripts/deploy.sh`
+  added, replacing a stub: takes a commit message, re-checks that the served
+  copy matches the engine and that the figures pass integrity, stages only the
+  four data paths, reports anything it deliberately left out, commits, pushes,
+  and says whether that actually deployed (only main does). Reached from
+  anywhere via `~/.local/bin/nhs-log-deploy`; `nhs-log-injest` in the same
+  folder points at ingest.sh.
 - 2026-07-28: code-review follow-ups on the v1.1 components (website 1.3.0).
   Band and clock-class key names now live in one place (`BANDS`/`CLASSES` in
   format.ts) instead of five, with the label maps typed against them so a key
