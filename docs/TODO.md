@@ -78,7 +78,11 @@ copies to website/public, exports archived under collision-proof names).
   rejected for a `Minutes` typo leaves both copies with an identical checksum,
   no leftover temporary file, and nothing at all in `git status`. Note that a
   failed *ingest* can still leave the canonical CSV replaced and an export
-  archived — those happen before regen runs.
+  archived — those happen before regen runs. (d) `scripts/ingest-check.sh`
+  added: runs ingest.sh then checks the result (published copy matches the
+  engine, integrity clean, export named correctly, frozen fixture and engine
+  code untouched). Never commits or pushes — prints the commands and stops.
+  On a stop it says exactly what did and did not move.
 - 2026-07-28: code-review follow-ups on the v1.1 components (website 1.3.0).
   Band and clock-class key names now live in one place (`BANDS`/`CLASSES` in
   format.ts) instead of five, with the label maps typed against them so a key
