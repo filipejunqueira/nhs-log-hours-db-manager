@@ -115,10 +115,9 @@ fi
 
 covers="$(basename "$newest" .csv)"
 covers="${covers##*covers-to-}"
-echo "ALL CHECKS PASSED. Review the figures above, then publish:"
+echo "ALL CHECKS PASSED. Review the figures above, then publish with:"
 echo
-echo "  git add data/exports engine_v2/data engine_v2/web_data.json website/public/web_data.json"
-echo "  git commit -m 'data: ingest export covering to $covers'"
-echo "  git push"
+echo "  nhs-log-deploy \"data: hours to $covers\""
 echo
+echo "That re-checks the figures, commits only the data files and pushes."
 echo "The push IS the deploy - there is no staging site."
