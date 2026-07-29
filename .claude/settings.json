@@ -12,5 +12,19 @@
       "Edit(engine_v2/**)",
       "Write(engine_v2/**)"
     ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "statusMessage": "Type-checking the website...",
+            "command": "jq -r \".tool_input.file_path\" | { read -r f; case \"$f\" in *website/src/*.vue|*website/src/*.ts) d=\"${f%%/website/src/*}/website\"; cd \"$d\" && npx vue-tsc -b >&2 || exit 2 ;; esac; exit 0; }"
+          }
+        ]
+      }
+    ]
   }
 }
