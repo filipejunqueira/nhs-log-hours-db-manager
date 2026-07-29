@@ -51,6 +51,16 @@ Results, against a sandbox copy at scratchpad/sb1 unless stated:
 Deviation from the plan: none in substance. `--force-export` was removed as
 planned and exits 1 with the explanatory message.
 
+Follow-on, agreed with the user after the plan was executed and outside its
+original scope: `regen.sh` wrote `web_data.json` and validated it afterwards,
+so a rejected run left the working tree holding refused data with the two
+copies disagreeing. It now builds into `web_data.json.tmp` and renames it into
+place only after the checks pass; a trap removes the temporary file on any
+exit. This strengthens invariant 4 from "bad data never reaches the *published*
+file" to "bad data never reaches *either* file". Verified: a run rejected for a
+`Minutes` typo leaves both copies at an identical checksum, no leftover
+temporary file, and an empty `git status`.
+
 Also renamed: `plan.md` → `PLAN.md` via `git mv`, to match CLAUDE.md and the
 plan-gate convention. Flagged to the user at approval time.
 

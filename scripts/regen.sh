@@ -13,12 +13,22 @@ CSV="$ENGINE/data/$CSV_NAME"
 [[ -f "$CSV" ]] || { echo "ERROR: CSV not found: $CSV" >&2; exit 1; }
 
 cd "$ENGINE"
+
+# Build into a temporary file and only put it in place once it has passed its
+# checks. Writing web_data.json directly and validating afterwards left a
+# rejected run holding data the engine refused to stand behind, with the
+# engine's copy and the website's copy disagreeing until someone ran
+# git checkout. The temporary file sits in the same directory as the target so
+# the final move is a rename within one filesystem, not a copy.
+TMP_JSON="web_data.json.tmp"
+trap 'rm -f "$ENGINE/$TMP_JSON"' EXIT
+
 echo "Regenerating web_data.json from data/$CSV_NAME ..."
-python3 -c "from afc_hours import core, emit; emit.write_json(core.compute_from_csv('data/$CSV_NAME'), 'web_data.json')"
+python3 -c "from afc_hours import core, emit; emit.write_json(core.compute_from_csv('data/$CSV_NAME'), '$TMP_JSON')"
 
 python3 -c "
 import json, sys
-d = json.load(open('web_data.json'))
+d = json.load(open('$TMP_JSON'))
 c = d['content']; t = c['totals']; ig = c['integrity']
 oks = {k: v for k, v in ig.items() if k.endswith('_ok')}
 print('  schema         ', d['meta']['schema_version'])
@@ -32,14 +42,20 @@ print('  warnings       ', ig['warnings'])
 bad = [k for k, v in oks.items() if not v]
 if bad or ig['warnings']:
     print('INTEGRITY FAIL:', bad, ig['warnings'], file=sys.stderr); sys.exit(1)
-print('OK: regenerated, all integrity checks pass.')
+print('OK: all integrity checks pass.')
 "
+
+# Only now does the real file change. Anything above this line that fails takes
+# the script out via set -e, the trap deletes the temporary file, and
+# engine_v2/web_data.json is left exactly as it was.
+mv -f "$TMP_JSON" "web_data.json"
+echo "OK: engine_v2/web_data.json updated."
 
 # The website reads its own copy of web_data.json. Nothing else keeps the two
 # in step, and a mismatch produces no error anywhere: the engine would be
 # current while the published page showed old figures. This sits AFTER the
-# integrity block above, which exits non-zero on failure, so figures that fail
-# their checks can never reach the published file.
+# checks above, so figures the engine will not stand behind can never reach the
+# published file.
 WEB_PUBLIC_DIR="$REPO_ROOT/website/public"
 if [[ -d "$WEB_PUBLIC_DIR" ]]; then
     cp -f "$ENGINE/web_data.json" "$WEB_PUBLIC_DIR/web_data.json"

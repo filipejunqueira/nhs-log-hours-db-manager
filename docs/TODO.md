@@ -69,7 +69,16 @@ copies to website/public, exports archived under collision-proof names).
   renamed. Verified against a throwaway copy of the repo: 6 scenarios plus all
   6 invariants, including that a failed integrity check cannot reach the
   published file, and that the same CSV still yields identical content
-  (16 808 min unchanged).
+  (16 808 min unchanged). (c) follow-on, found while testing: regen.sh wrote
+  `web_data.json` and validated it afterwards, so a rejected run left the
+  working tree holding data the engine refused, with the two copies
+  disagreeing until someone ran `git checkout`. It now builds into
+  `web_data.json.tmp` and renames it into place only once the checks pass,
+  with a trap removing the temporary file on any exit. Verified: a run
+  rejected for a `Minutes` typo leaves both copies with an identical checksum,
+  no leftover temporary file, and nothing at all in `git status`. Note that a
+  failed *ingest* can still leave the canonical CSV replaced and an export
+  archived — those happen before regen runs.
 - 2026-07-28: code-review follow-ups on the v1.1 components (website 1.3.0).
   Band and clock-class key names now live in one place (`BANDS`/`CLASSES` in
   format.ts) instead of five, with the label maps typed against them so a key
