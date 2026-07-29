@@ -4,8 +4,8 @@ Single source of truth for what is done, what is next, and what is parked.
 Update this file as part of every session wrap-up (project-knowledge-updater
 reads and propagates; session snapshots should reference it, not duplicate it).
 
-Last updated: 2026-07-28 (session: code-review follow-ups on the v1.1
-components; data shape check added; website app version 1.3.0).
+Last updated: 2026-07-29 (session: ingest pipeline closed - regen.sh now
+copies to website/public, exports archived under collision-proof names).
 
 ## Now (in order)
 
@@ -16,9 +16,11 @@ components; data shape check added; website app version 1.3.0).
      mirroring `weekly`);
    - "hours not yet paid by payroll" (needs a paid-up-to marker as input —
      where does the user record what payroll has processed? Design question).
-2. **scripts/update.sh** — the full export → ingest → copy to
-   website/public → commit/push chain (BUILD_NOTES §5 caveats: headless
-   xlsx→csv, non-interactive git auth, surfaced failures).
+2. **scripts/update.sh** — the remaining automation. The "copy to
+   website/public" link is DONE (2026-07-29: regen.sh does it), so what is
+   left is the headless xlsx→csv conversion and the cron wrapper
+   (BUILD_NOTES §5 caveats: non-interactive git auth, failures made visible).
+   Committing and pushing stays deliberately manual — the push publishes.
 
 ## Later / parked
 
@@ -50,6 +52,24 @@ components; data shape check added; website app version 1.3.0).
 
 ## Done log
 
+- 2026-07-29: ingest pipeline closed, two gaps found by walking the export →
+  live-site path. (a) `regen.sh` now copies `engine_v2/web_data.json` to
+  `website/public/web_data.json` after the integrity checks pass. Before this
+  the copy was a hand step nobody automated — a leftover from 26 June when
+  `website/` did not exist — so the engine could be current while the published
+  page showed old figures, with no error anywhere. (b) `ingest.sh` archives
+  exports as `hours_export_<ingest-time>_covers-to-<last-work-date>.csv`. The
+  old name was the last work date alone, so two exports taken weeks apart
+  collided if no new days were added, and the documented answer
+  (`--force-export`) overwrote the earlier file. That flag is now removed and
+  exits with an explanation. Re-ingesting an identical file reports the match
+  instead of making a duplicate. Note: the two 19-July exports are named by
+  download date under the old hand-naming, and `hours_export_2026-07-18.csv`
+  actually ends 14 Jul — recorded in the new `data/exports/README.md`, not
+  renamed. Verified against a throwaway copy of the repo: 6 scenarios plus all
+  6 invariants, including that a failed integrity check cannot reach the
+  published file, and that the same CSV still yields identical content
+  (16 808 min unchanged).
 - 2026-07-28: code-review follow-ups on the v1.1 components (website 1.3.0).
   Band and clock-class key names now live in one place (`BANDS`/`CLASSES` in
   format.ts) instead of five, with the label maps typed against them so a key

@@ -5,18 +5,24 @@
 #   1. locate the newest hours-shaped CSV in the downloads folder (or take an
 #      explicit path as the last argument)
 #   2. dry-run validate it through the engine BEFORE anything is copied
-#   3. name it by its latest entry date -> data/exports/hours_export_<date>.csv
+#   3. archive it under data/exports/ as
+#      hours_export_<ingest-time>_covers-to-<last-work-date>.csv. The ingest
+#      time makes the name unique, so no export is ever overwritten and the
+#      folder stays a complete record. A source byte-identical to an export
+#      already held is reported, not copied again.
 #   4. drift gate: changed, removed or backfilled HISTORICAL rows relative to
 #      the canonical CSV (the last accepted state) stop the run for review;
 #      re-run with --accept-drift to adopt the new file (keeping the old
 #      data = simply do not re-run)
 #   5. copy to the canonical engine CSV and regenerate web_data.json via
-#      scripts/regen.sh, reporting the figure delta
+#      scripts/regen.sh, reporting the figure delta. regen.sh also refreshes
+#      website/public/web_data.json, so the published page cannot silently
+#      disagree with the engine.
 #
 # The frozen test fixture (engine_v2/tests/fixtures/) is NEVER touched here;
 # re-freezing it is a separate deliberate act.
 #
-# Usage: scripts/ingest.sh [--accept-drift] [--force-export] [path/to/export.csv]
+# Usage: scripts/ingest.sh [--accept-drift] [path/to/export.csv]
 # Env:   HOURS_DOWNLOADS_DIR  source folder (default /home/filipejunqueira/downloads)
 
 set -euo pipefail
@@ -29,7 +35,6 @@ DOWNLOADS="${HOURS_DOWNLOADS_DIR:-/home/filipejunqueira/downloads}"
 HEADER_PREFIX="Date,Start,End,Minutes,Hours,"
 
 ACCEPT_DRIFT=0
-FORCE_EXPORT=0
 SRC=""
 
 die()  { echo "ERROR: $*" >&2; exit 1; }
@@ -39,8 +44,10 @@ parse_args() {
     for arg in "$@"; do
         case "$arg" in
             --accept-drift) ACCEPT_DRIFT=1 ;;
-            --force-export) FORCE_EXPORT=1 ;;
-            -h|--help) sed -n '2,20p' "${BASH_SOURCE[0]}"; exit 0 ;;
+            --force-export)
+                die "--force-export was removed: export names now include the \
+ingest time, so two ingests can never collide and nothing is overwritten." ;;
+            -h|--help) sed -n '2,26p' "${BASH_SOURCE[0]}"; exit 0 ;;
             -*) die "unknown flag: $arg" ;;
             *) SRC="$arg" ;;
         esac
@@ -125,17 +132,16 @@ main() {
     read -r latest rows total <<< "$probe_out"
     info "validated: $rows rows, $total min, latest entry $latest"
 
-    local target="$EXPORTS/hours_export_${latest}.csv"
-    if [[ -f "$target" ]]; then
-        if cmp -s "$SRC" "$target"; then
-            info "already ingested: $target is byte-identical to the source"
-        elif [[ "$FORCE_EXPORT" -eq 1 ]]; then
-            info "OVERWRITING $target (--force-export)"
-        else
-            die "collision: $target exists with DIFFERENT content (same latest \
-entry date). Review both files, then re-run with --force-export to replace it."
-        fi
-    fi
+    # Is this exact file already in the archive? Compare against every export
+    # held, not just one expected name: the name now carries the ingest time,
+    # so a repeat of the same export would otherwise get a second copy under a
+    # new name every run.
+    mkdir -p "$EXPORTS"
+    local already="" f
+    for f in "$EXPORTS"/*.csv; do
+        [[ -f "$f" ]] || continue
+        if cmp -s "$SRC" "$f"; then already="$f"; break; fi
+    done
 
     if [[ -f "$CANONICAL" ]]; then
         local drift_out=""
@@ -153,9 +159,25 @@ correction in the commit message."
         info "no canonical CSV yet; skipping drift gate"
     fi
 
-    mkdir -p "$EXPORTS"
-    cp -f "$SRC" "$target"
-    info "export staged: $target"
+    # Archive the export. The ingest time makes the name unique, so this never
+    # overwrites: data/exports/ is a complete record of every distinct file
+    # that has ever been the basis for published figures.
+    if [[ -n "$already" ]]; then
+        info "already archived: byte-identical to $(basename "$already") — no second copy made"
+    else
+        local stamp target
+        stamp="$(date +%Y-%m-%d_%H%M)"
+        target="$EXPORTS/hours_export_${stamp}_covers-to-${latest}.csv"
+        if [[ -e "$target" ]]; then
+            stamp="$(date +%Y-%m-%d_%H%M%S)"
+            target="$EXPORTS/hours_export_${stamp}_covers-to-${latest}.csv"
+        fi
+        if [[ -e "$target" ]]; then
+            die "refusing to overwrite $target (two ingests within the same second?)"
+        fi
+        cp -f "$SRC" "$target"
+        info "export archived: $(basename "$target")"
+    fi
 
     local before="none"
     if [[ -f "$ENGINE/web_data.json" ]]; then
@@ -171,7 +193,9 @@ print(c['totals']['total_minutes'], 'min /', len(c['daily']), 'days /', c['perio
 
     echo
     info "figures before: $before"
-    info "next: git add the new export, the canonical CSV and web_data.json;"
+    info "next: review the figures above, then commit and push to publish:"
+    info "  git add data/exports engine_v2/data engine_v2/web_data.json website/public/web_data.json"
+    info "  git commit && git push        # the push IS the deploy - no staging site"
     info "the frozen test fixture was NOT touched (re-freeze deliberately if wanted)"
 }
 

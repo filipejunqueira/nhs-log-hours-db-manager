@@ -35,7 +35,19 @@ if bad or ig['warnings']:
 print('OK: regenerated, all integrity checks pass.')
 "
 
+# The website reads its own copy of web_data.json. Nothing else keeps the two
+# in step, and a mismatch produces no error anywhere: the engine would be
+# current while the published page showed old figures. This sits AFTER the
+# integrity block above, which exits non-zero on failure, so figures that fail
+# their checks can never reach the published file.
+WEB_PUBLIC_DIR="$REPO_ROOT/website/public"
+if [[ -d "$WEB_PUBLIC_DIR" ]]; then
+    cp -f "$ENGINE/web_data.json" "$WEB_PUBLIC_DIR/web_data.json"
+    echo "OK: copied to website/public/web_data.json"
+else
+    echo "NOTE: $WEB_PUBLIC_DIR not found; skipped the website copy" >&2
+fi
+
 # --- deferred (the future scripts/update.sh will wrap this) ---
 #  1. copy newest CSV from ~/downloads into data/ before regen
-#  2. cp web_data.json -> website/public/web_data.json   (once website/ exists)
-#  3. prompt: git add/commit/push to trigger the Pages deploy
+#  2. prompt: git add/commit/push to trigger the Pages deploy
