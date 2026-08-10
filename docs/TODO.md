@@ -4,18 +4,21 @@ Single source of truth for what is done, what is next, and what is parked.
 Update this file as part of every session wrap-up (project-knowledge-updater
 reads and propagates; session snapshots should reference it, not duplicate it).
 
-Last updated: 2026-07-29 (session: ingest pipeline closed - regen.sh now
-copies to website/public, exports archived under collision-proof names).
+Last updated: 2026-08-10 (session: hours-owed mechanism designed; PLAN.md
+written for schema 1.2.0, awaiting plan-gate and a deliberate lock-lift).
 
 ## Now (in order)
 
-1. **Website improvements** (user request 2026-07-19, needs planning + a
-   plan-gate; both likely need engine schema 1.2.0 since aggregation belongs
-   in the engine, not the browser):
-   - per-MONTH breakdown (candidate: engine emits a `monthly` array
-     mirroring `weekly`);
-   - "hours not yet paid by payroll" (needs a paid-up-to marker as input —
-     where does the user record what payroll has processed? Design question).
+1. **Schema 1.2.0 — hours OWED, plus the per-month breakdown.** Designed
+   2026-08-10; full plan and success criteria in `PLAN.md` at the repo root.
+   The open design question ("where does the user record what payroll has
+   processed?") is ANSWERED: a Payments tab in the same workbook, one row per
+   payment event (`Date,MinutesPaid,HoursPaid,Note`), template written at
+   `data/payments_template.csv`. Payments settle the oldest unpaid week first;
+   the engine does the subtraction. User chose one lock-lift for both the
+   payments work and the monthly array rather than two (option (a)).
+   BLOCKED-BY: the user removing the `engine_v2/**` deny rules in
+   `.claude/settings.json` — deliberate, not casual, and restored afterwards.
 2. **scripts/update.sh** — the remaining automation. The "copy to
    website/public" link is DONE (2026-07-29: regen.sh does it), so what is
    left is the headless xlsx→csv conversion and the cron wrapper
@@ -35,14 +38,16 @@ copies to website/public, exports archived under collision-proof names).
   invariants with proofs → audit history → reproduction commands. Assemble
   largely from `AUDIT_BRIEF.md` and the audit reports.
 - **money.py (Part ii)** and the private financial view — after the dashboard.
-- **Schema 1.2.0 (next deliberate engine lock-lift)**: emit
-  `above_contract_minutes` so the header figure comes from the engine and the
-  sanctioned `sumMinutes` in format.ts is deleted (decision of 2026-07-19:
-  option a now, c later).
+- ~~Schema 1.2.0 `above_contract_minutes`~~ — PROMOTED to Now item 1
+  (2026-08-10): it is folded into the same lock-lift as the payments work,
+  which is what finally deletes `sumMinutes` from format.ts.
 - Stale `-isation` filename references in `audit/README.md:32` and the
   characterisation suite's own docstring (cosmetic; run command shown is wrong).
-- Start using `notes/snapshots/` in this repo (end sessions with
-  /session-wrapup) so snapshot-restore finds snapshots without guesswork.
+- ~~Start using `notes/snapshots/`~~ — DONE; two snapshots exist and
+  snapshot-restore found the newest without guesswork (confirmed 2026-08-10).
+  Note the failure mode it exposed: a snapshot 20 days stale described website
+  1.2.0 when the repo was at 1.3.0. The ledger below is the record; a snapshot
+  is only a photograph.
 - **Unverified test claim**: the 2026-07-19 Done-log entry below says
   useHoursData's schema gate was "unit-tested 11 cases," but no test
   framework or test file exists anywhere in `website/` (no vitest,
@@ -52,6 +57,32 @@ copies to website/public, exports archived under collision-proof names).
 
 ## Done log
 
+- 2026-08-10: designed the hours-OWED mechanism (planning only; no engine or
+  website code touched). The gap: nothing anywhere records what payroll has
+  settled, so neither HR nor Vince can tell how many extra hours are actually
+  owed — only how many were worked. Answer: a Payments tab in the same
+  workbook (one row per payment event), the engine subtracts, the site shows
+  the remainder. Design decisions taken with the user: one owed bucket rather
+  than per-band; a short week is zero extra, never negative (the log holds no
+  leave data, so offsetting would invent a fact); one lock-lift carrying both
+  the payments work and the monthly array. Written: `PLAN.md` (full success
+  criteria) and `data/payments_template.csv` (header-only on purpose — a
+  leftover example row would ingest as a fake payment). Two findings from
+  reading the engine that shaped the design: (a) `core.compute()` takes rows
+  only, which its docstring calls the structural guarantee that no flag can
+  inflate the hours, so payments must live in a separate module rather than
+  become an argument to it; (b) the money-free test only looks for `£`/`gbp`,
+  so a free-text note saying `$400` or "salary arrears" would reach a public
+  page unchallenged — ingest will reject a wider set than the test checks.
+  Baseline recorded before any change: 96 tests green (67 engine, 29
+  characterisation), no golden-hash pin anywhere, but
+  `test_emit.py::test_schema_version_is_current` pins 1.1.0 deliberately and
+  is meant to break on the bump.
+- 2026-08-02: routine ingest through to 31 July (commit "31 of July
+  finished") — two new working days (30 and 31 Jul) added to the canonical
+  CSV from a 47-row export, with both copies of web_data.json regenerated in
+  the same commit. First real use of the pipeline closed on 2026-07-29; it
+  worked with no hand steps.
 - 2026-07-29: ingest pipeline closed, two gaps found by walking the export →
   live-site path. (a) `regen.sh` now copies `engine_v2/web_data.json` to
   `website/public/web_data.json` after the integrity checks pass. Before this
