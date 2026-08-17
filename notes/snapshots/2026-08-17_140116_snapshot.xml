@@ -1,0 +1,270 @@
+<session_snapshot>
+  <origin>
+    <project>nhs-hour-log</project>
+    <session_date>2026-08-17</session_date>
+    <session_summary>This conversation's own work was 2026-07-28/29: it fixed
+    six code-review findings on the v1.1 website components (website 1.3.0,
+    live), then closed the gaps in the export-to-published-page pipeline —
+    regen.sh now copies to website/public and validates before replacing,
+    exports are archived under names that cannot collide, and ingest-check.sh
+    and deploy.sh were added and wired to the nhs-log-ingest / nhs-log-deploy
+    commands. IMPORTANT: the repo has moved on since. A later session on
+    2026-08-10 designed schema 1.2.0 (hours owed) and parked finished engine
+    files awaiting a deliberate lock-lift; that, not the pipeline work, is the
+    current frontier.</session_summary>
+  </origin>
+
+  <do_not_redo>
+    <item>The six findings from the /code-review of commit 6b98f8e are all
+    fixed and deployed (ad8d877): one shared band/class list, a data shape
+    check, consistent percentage decimals, round-hour chart axis, a
+    screen-reader summary, and the lockfile version. Do not re-review that
+    commit.</item>
+    <item>`npx vue-tsc --noEmit` type-checks ZERO files in this project — the
+    root website/tsconfig.json is a references-only solution file (`"files":
+    []`), so it always exits 0 and proves nothing. Proven by deliberate break.
+    The real command is `vue-tsc -b` (add `--force` to bypass the cache).
+    Recorded in docs/BUILD_NOTES.md §6. Do not re-diagnose this.</item>
+    <item>Unrecognised band/class keys in web_data.json produce a visible
+    amber banner and the page still renders everything it understands — user's
+    explicit choice over refusing to load, so a future engine release cannot
+    take the live page down. Do not "tighten" this into a hard failure.</item>
+    <item>No vitest, no test framework in website/. Still parked (see TODO.md
+    Later). Do not add one as part of routine work; validate.ts in particular
+    invites unit tests and must not get them unasked.</item>
+    <item>`--force-export` was REMOVED from ingest.sh on purpose: export names
+    now carry the ingest time so nothing can collide. The flag exits 1 with an
+    explanation. Do not reinstate it.</item>
+    <item>The two pre-2026-07-29 exports keep their hand-given names (by
+    download date). `hours_export_2026-07-18.csv` in fact ends 14 Jul —
+    verified by running the engine on it. Documented in
+    data/exports/README.md; deliberately NOT renamed. Do not "fix" them.</item>
+    <item>A `meta.subject` warning inside the browser (lib/validate.ts) was
+    considered and REJECTED — it would fire on an already-published page, after
+    the name was in git and on a public site. If protection is ever wanted it
+    belongs in scripts/regen.sh, before anything is committed. Nothing in the
+    pipeline currently sets subject: regen.sh calls the engine without it.</item>
+    <item>The repo's plan file is `PLAN.md` (uppercase), renamed via git mv on
+    2026-07-29 to match CLAUDE.md and the plan-gate convention. It was
+    lowercase `plan.md` from June to July. Do not rename it back.</item>
+    <item>Committing and pushing stays a deliberate manual step even once
+    scripts/update.sh exists — the push publishes to a world-readable page.
+    Settled twice. Do not automate it into the cron chain.</item>
+  </do_not_redo>
+
+  <decisions_made>
+    <decision topic="bad-data-behaviour">
+      <what>Data the page does not fully understand renders anyway, above an
+      amber banner naming what was not recognised. A missing content block is
+      the only fatal case and reaches the existing error panel.</what>
+      <why>User's explicit choice. A hard refusal would let a future engine
+      release take the live page down; payroll seeing the figures it can plus a
+      loud warning beats a blank error box.</why>
+    </decision>
+    <decision topic="export-naming">
+      <what>data/exports/hours_export_&lt;ingest-time&gt;_covers-to-&lt;last-work-date&gt;.csv,
+      with a seconds-resolution fallback if the minute-level name exists.</what>
+      <why>The old name was the last work date alone, so two exports taken
+      weeks apart collided whenever no new days had been added — and the
+      documented fix, --force-export, overwrote the earlier file. The archive
+      is the audit trail; an archive that can be overwritten cannot answer
+      "which export did this figure come from".</why>
+    </decision>
+    <decision topic="where-the-website-copy-lives">
+      <what>The copy to website/public/web_data.json sits in regen.sh, not
+      ingest.sh.</what>
+      <why>regen.sh is what produces web_data.json, so anyone running it
+      directly also keeps the site in step. ingest.sh calls regen.sh and
+      inherits the behaviour for free.</why>
+    </decision>
+    <decision topic="validate-before-replacing">
+      <what>regen.sh builds into web_data.json.tmp and renames it into place
+      only after the integrity checks pass; a trap removes the temporary file
+      on any exit.</what>
+      <why>It previously wrote the real file then validated, so a rejected run
+      left the working tree holding refused data with the engine's copy and the
+      website's copy disagreeing until someone ran git checkout. Turns "bad
+      data never reaches the published file" into "never reaches either
+      file".</why>
+    </decision>
+    <decision topic="chart-axis">
+      <what>CumulativeChart plots hours rather than minutes.</what>
+      <why>Chart.js picks tick positions round in whatever unit it is given.
+      Minutes produced 33.33 h / 66.67 h; rounding only the label gave 33 h /
+      67 h, still not round. Plotting hours gives 0/50/…/300 h. The numeric
+      conversion lives in format.ts (minutesToHoursValue) so the cardinal rule
+      holds.</why>
+    </decision>
+    <decision topic="two-ingest-entry-points">
+      <what>ingest.sh does the work; ingest-check.sh wraps it and reports
+      PASS/FAIL on five things afterwards. Both kept.</what>
+      <why>A human wants the report and the next command; the eventual
+      update.sh on a timer wants a plain exit code. The wrapper's real value is
+      catching silent failures — notably that regen.sh only prints a NOTE and
+      exits 0 if website/public is missing, so a run can look successful while
+      the published copy is stale.</why>
+    </decision>
+  </decisions_made>
+
+  <current_state>
+    <item>HEAD is 2053ae5 "docs: plan + proven engine files for schema 1.2.0
+    (hours owed)". Working tree CLEAN. Branch main is AHEAD OF origin BY ONE
+    COMMIT — 2053ae5 is unpushed. It touches no data file, so nothing published
+    is affected by that.</item>
+    <item>Published figures: schema 1.1.0, 2026-06-01 to 2026-07-31, 26 343 min
+    over 47 days. engine_v2/web_data.json and website/public/web_data.json are
+    byte-identical (checked).</item>
+    <item>Website app version 1.3.0, live and verified in a real browser at
+    https://filipejunqueira.github.io/nhs-log-hours-db-manager/ — footer, the
+    aligned percentage columns, the screen-reader summary and zero page errors
+    all confirmed on the deployed page.</item>
+    <item>docs/TODO.md "Last updated" reads 2026-08-10 and its Now list is
+    current: item 1 is schema 1.2.0 (hours owed plus the per-month breakdown),
+    item 2 is scripts/update.sh with the website-copy link already done.</item>
+    <item>notes/pending-engine-1.2.0/ holds five FINISHED, TESTED engine files
+    (afc_hours/core.py, emit.py, payments.py and two test files) plus APPLY.md.
+    Built and proven 2026-08-10 in a throwaway copy of the repo, parked because
+    engine_v2/** is deny-listed. The lock only ever needs to open for a
+    verified file copy, never for development.</item>
+    <item>The engine lock is STILL IN PLACE: .claude/settings.json denies
+    Edit(engine_v2/**) and Write(engine_v2/**). TODO Now item 1 is explicitly
+    BLOCKED-BY the user removing those rules — a deliberate act, restored
+    afterwards.</item>
+    <item>data/payments_template.csv exists (Date,MinutesPaid,HoursPaid,Note).
+    The design question "where does the user record what payroll processed" is
+    ANSWERED: a Payments tab in the same workbook; payments settle the oldest
+    unpaid week first; the engine does the subtraction.</item>
+    <item>.claude/settings.json also carries a PostToolUse hook added
+    2026-07-28: it runs `vue-tsc -b` after any edit to a .vue/.ts file under
+    website/src/ and BLOCKS the edit on a type error. Proven to fire.</item>
+    <item>Two shell commands exist in /home/filipejunqueira/.local/bin:
+    nhs-log-ingest -> scripts/ingest-check.sh and nhs-log-deploy ->
+    scripts/deploy.sh. The earlier misspelled nhs-log-injest and the
+    inconsistent deploy-nhs-log were removed.</item>
+    <item>PLAN.md at the repo root is the schema 1.2.0 plan (goal: anyone
+    reading the site can answer "how many extra hours is he owed, and since
+    when"). The previous two plans are archived at
+    notes/plans/2026-07-28_code-review-followups.md and
+    notes/plans/2026-07-29_ingest-pipeline-close.md.</item>
+  </current_state>
+
+  <next_steps>
+    <step priority="1">Decide whether to push the one unpushed commit
+    (2053ae5). It is documentation plus the parked engine files — no data
+    change, so no figure moves. Ask the user first; this project's discipline
+    is that a fresh session never pushes unprompted.</step>
+    <step priority="2">See docs/TODO.md — the Now list is the ledger and is
+    current as of 2026-08-10. Item 1 (schema 1.2.0, hours owed plus the monthly
+    array) is the substantive work and is BLOCKED-BY the user removing the
+    engine_v2 deny rules from .claude/settings.json. Read PLAN.md and
+    notes/pending-engine-1.2.0/APPLY.md before touching anything; the engine
+    files are already written and tested, so this is a verified copy plus
+    front-end work, not development.</step>
+    <step priority="3">Not yet in TODO.md, add it there if taken up: PLAN.md
+    should be archived to notes/plans/ once the 1.2.0 slice completes, per the
+    project's own convention (the two previous plans already are).</step>
+  </next_steps>
+
+  <files_touched>
+    <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/website/src/lib/format.ts">BANDS/CLASSES arrays as the single source of the key names; label maps typed against them so a missing label is a compile error; formatPercent; minutesToHoursValue</file>
+    <file action="created" path="/home/filipejunqueira/code/nhs-hour-log/website/src/lib/validate.ts">checkData returns {fatal, warnings} — missing content block is fatal, unrecognised band/class keys are warnings</file>
+    <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/website/src/types/web-data.ts">Band/UnsocialClass derive from the format.ts arrays via `import type`, so the module still emits no runtime JavaScript</file>
+    <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/website/src/composables/useHoursData.ts">runs checkData after the version check; returns a new `warnings` ref</file>
+    <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/website/src/App.vue">amber warning banner above the panels when warnings is non-empty</file>
+    <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/website/src/components/CumulativeChart.vue">plots hours not minutes; sr-only summary; computed now reads props inside the callback</file>
+    <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/website/src/components/StatsPanel.vue">shares go through formatPercent; imports the shared key arrays</file>
+    <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/website/src/components/CrossTab.vue">imports the shared key arrays</file>
+    <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/website/src/components/TotalsPanel.vue">imports the shared key arrays</file>
+    <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/website/package.json">version 1.2.0 -> 1.3.0</file>
+    <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/website/package-lock.json">both root "version" fields hand-edited to 1.3.0 (NOT npm install, which would re-resolve caret ranges)</file>
+    <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/scripts/regen.sh">copies to website/public after the checks; builds into web_data.json.tmp and renames only on success, with a trap cleaning up</file>
+    <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/scripts/ingest.sh">collision-proof export naming; duplicate detection against every archived export; --force-export removed; closing message points at the git commands</file>
+    <file action="created" path="/home/filipejunqueira/code/nhs-hour-log/scripts/ingest-check.sh">runs ingest.sh then five checks; never commits or pushes; points at nhs-log-deploy</file>
+    <file action="created" path="/home/filipejunqueira/code/nhs-hour-log/scripts/deploy.sh">replaced a stub whose `list_files_to_add=[]` was Python not bash; checks, stages only the four data paths, commits, pushes, says whether that deployed</file>
+    <file action="created" path="/home/filipejunqueira/code/nhs-hour-log/data/exports/README.md">records the two naming eras and that nothing here is ever overwritten</file>
+    <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/docs/BUILD_NOTES.md">new §6: vue-tsc --noEmit checks zero files here; use -b</file>
+    <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/.claude/settings.json">PostToolUse hook running vue-tsc -b on website .vue/.ts edits</file>
+    <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/docs/TODO.md">Done-log entries for 2026-07-28 and 2026-07-29 (further edited by the later 2026-08-10 session)</file>
+    <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/PLAN.md">renamed from plan.md via git mv; since REWRITTEN by the 2026-08-10 session for schema 1.2.0</file>
+    <file action="created" path="/home/filipejunqueira/code/nhs-hour-log/notes/plans/2026-07-28_code-review-followups.md">archived</file>
+    <file action="created" path="/home/filipejunqueira/code/nhs-hour-log/notes/plans/2026-07-29_ingest-pipeline-close.md">archived by the later session</file>
+  </files_touched>
+
+  <files_to_read>
+    <file path="/home/filipejunqueira/code/nhs-hour-log/docs/TODO.md">the ledger — start here; Now list is current as of 2026-08-10</file>
+    <file path="/home/filipejunqueira/code/nhs-hour-log/PLAN.md">the active schema 1.2.0 plan: goal, success criteria, worklog evidence</file>
+    <file path="/home/filipejunqueira/code/nhs-hour-log/notes/pending-engine-1.2.0/APPLY.md">how to apply the five finished engine files once the lock is lifted — read BEFORE touching engine_v2/</file>
+    <file path="/home/filipejunqueira/code/nhs-hour-log/docs/BUILD_NOTES.md">§3 field-to-formatter map (load-bearing for any figures work) and the new §6 on vue-tsc</file>
+    <file path="/home/filipejunqueira/code/nhs-hour-log/data/exports/README.md">why the archive has two naming eras and why nothing is overwritten</file>
+    <file path="/home/filipejunqueira/code/nhs-hour-log/website/src/lib/format.ts">the only arithmetic surface, and the single source of the band/class names</file>
+  </files_to_read>
+
+  <domain_state>
+    <website>App version 1.3.0 (website/package.json), separate from the
+    engine's schema_version (1.1.0). Nine components plus lib/format.ts,
+    lib/schema.ts, lib/validate.ts. Dependencies: vue, tailwindcss,
+    @tailwindcss/vite, chart.js, vue-chartjs. Deployed by
+    .github/workflows/deploy.yml on push to main, which runs `npm ci` on Node
+    24. No staging site. Type checking: `npx vue-tsc -b` from website/ —
+    `--noEmit` is a no-op here.</website>
+    <pipeline>Export CSV into /home/filipejunqueira/downloads (header must start
+    `Date,Start,End,Minutes,Hours,`), then `nhs-log-ingest`, then
+    `nhs-log-deploy "message"`. ingest.sh validates before copying, archives
+    under a collision-proof name, stops on historical drift unless
+    --accept-drift, updates the canonical CSV and calls regen.sh, which
+    regenerates and copies to website/public. A failed ingest can still leave
+    the canonical CSV replaced and an export archived (both happen before regen
+    runs); web_data.json and the published copy are untouched.</pipeline>
+    <engine>Schema 1.1.0, locked — deny rules active in .claude/settings.json.
+    Schema 1.2.0 is written and tested but PARKED in
+    notes/pending-engine-1.2.0/ awaiting a deliberate lock-lift by the user.
+    Nothing in the pipeline passes a `subject` to the engine, so the committed
+    JSON stays identity-light.</engine>
+    <verification-tooling>Playwright was installed into a throwaway npm project
+    in this session's job directory and is GONE again — a future session must
+    repeat that (the Chromium binary is cached under
+    /home/filipejunqueira/containers/claude-home/.cache/ms-playwright/, and the
+    system libraries installed via pacman persist, so only the npm side needs
+    redoing). shellcheck 0.10.0 is installed and a global PostToolUse hook runs
+    it on every .sh write, blocking the edit on any finding. gh CLI is still NOT
+    installed — the deploy can only be checked by fetching the live page.</verification-tooling>
+  </domain_state>
+
+  <warnings>
+    <warning>THIS SNAPSHOT SPANS TWO ERAS. The conversation that produced it did
+    its work on 2026-07-28/29; the repo then moved on in a session on
+    2026-08-10 that this conversation did not participate in. Everything under
+    current_state was read from the files today and is accurate; but do not
+    assume the 2026-07-29 pipeline work is the frontier — schema 1.2.0 is.</warning>
+    <warning>The container's HOME is
+    /home/filipejunqueira/containers/claude-home, NOT /home/filipejunqueira. So
+    `~/.local/bin` from inside a session does not resolve to the user's real
+    ~/.local/bin where nhs-log-ingest and nhs-log-deploy live. Always use the
+    absolute /home/filipejunqueira/... path when touching the user's own
+    dotfiles or PATH.</warning>
+    <warning>`rm -rf` is denied by the user's global settings, with no
+    exceptions — an allow rule cannot override a deny. Build a fresh
+    directory rather than clearing one, or use `rm -f` on single files.</warning>
+    <warning>Interactive aliases bite in Bash tool calls: `cp` is aliased to
+    `cp -i` (it will silently prompt and NOT copy — use `command cp -f`), and
+    `ls` is aliased to lsd (which rejects flags like --time-style — use
+    `command ls`).</warning>
+    <warning>`pkill -f "some pattern"` matches the shell running your own
+    command line, because the pattern appears in it. It will kill your own tool
+    call. Use a pattern that cannot match itself, or stop background tasks
+    another way.</warning>
+    <warning>The Bash working directory resets to the repo root between calls.
+    Every command that depends on being inside website/ or a sandbox must `cd`
+    explicitly in the same command.</warning>
+    <warning>The shellcheck PostToolUse hook blocks a .sh write on ANY finding,
+    including a genuinely half-finished edit (it caught `target` referenced but
+    no longer assigned during this session). A rejected write is that hook
+    working, not a tool fault — read the output and finish the change.</warning>
+    <warning>engine_v2/ is deny-listed for the Edit and Write tools, but that
+    does not stop a script from writing inside it at runtime — regen.sh writes
+    engine_v2/web_data.json every run. Running regen.sh or ingest.sh for a check
+    therefore dirties the working tree with a new `generated_at`; revert with
+    `git checkout --` if the content is otherwise identical, so the data files
+    do not churn.</warning>
+  </warnings>
+</session_snapshot>
