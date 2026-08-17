@@ -9,6 +9,9 @@ REPO_ROOT="$(cd "$(dirname "$SCRIPT_PATH")/.." && pwd)"
 ENGINE="$REPO_ROOT/engine_v2"
 CSV_NAME="filipe_working_hours_log.csv"
 CSV="$ENGINE/data/$CSV_NAME"
+# A missing payments file is legal and means no payments have been received yet.
+# That is today's real state, so this must never be treated as an error.
+PAYMENTS_NAME="payments.csv"
 
 [[ -f "$CSV" ]] || { echo "ERROR: CSV not found: $CSV" >&2; exit 1; }
 
@@ -24,7 +27,20 @@ TMP_JSON="web_data.json.tmp"
 trap 'rm -f "$ENGINE/$TMP_JSON"' EXIT
 
 echo "Regenerating web_data.json from data/$CSV_NAME ..."
-python3 -c "from afc_hours import core, emit; emit.write_json(core.compute_from_csv('data/$CSV_NAME'), '$TMP_JSON')"
+
+# Payments are read here and handed to emit, NOT passed into core.compute():
+# compute() takes rows only, which its own docstring calls the structural
+# guarantee that no flag can inflate the hours. Reconciliation is a separate,
+# pure step over the weeks it produces.
+python3 -c "
+from afc_hours import core, emit, payments
+result = core.compute_from_csv('data/$CSV_NAME')
+paid = payments.ingest_payments_csv('data/$PAYMENTS_NAME')
+emit.write_json(
+    result, '$TMP_JSON',
+    reconciliation=payments.reconcile(result.weeks, paid),
+)
+"
 
 python3 -c "
 import json, sys
@@ -37,9 +53,22 @@ print('  total          ', t['total_minutes'], 'min (', round(t['total_minutes']
 print('  bands          ', t['minutes_by_band'])
 print('  classes        ', t['minutes_by_class'])
 print('  within_baseline', t['unsocial_within_baseline_minutes'])
+print('  above contract ', t['above_contract_minutes'], 'min')
+print('  months         ', [m['month'] for m in c['monthly']])
+p = c['payments']
+print('  paid           ', p['paid_minutes'], 'min')
+print('  OWED (unpaid)  ', p['unpaid_minutes'], 'min (', round(p['unpaid_minutes']/60, 2), 'h )')
+if p['overpaid_minutes']:
+    print('  overpaid       ', p['overpaid_minutes'], 'min')
+print('  paid up to     ', p['paid_up_to'] or '(nothing settled yet)')
+print('  payment notes  ', p['warnings'] or '(none)')
 print('  integrity      ', oks)
 print('  warnings       ', ig['warnings'])
 bad = [k for k, v in oks.items() if not v]
+# The fail condition reads integrity ONLY. Payment warnings print above and are
+# deliberately not fatal: an overpayment is a true state of the world, and
+# refusing to publish on one would make the site permanently unpublishable the
+# first time payroll settles more than was accrued.
 if bad or ig['warnings']:
     print('INTEGRITY FAIL:', bad, ig['warnings'], file=sys.stderr); sys.exit(1)
 print('OK: all integrity checks pass.')

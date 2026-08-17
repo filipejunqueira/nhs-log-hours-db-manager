@@ -1,7 +1,7 @@
 {
   "meta": {
-    "schema_version": "1.1.0",
-    "generated_at": "2026-08-02T14:57:04Z",
+    "schema_version": "1.2.0",
+    "generated_at": "2026-08-17T14:37:30Z",
     "unit": "minutes",
     "unit_note": "All durations are in minutes; divide by 60 for hours.",
     "contract": {
@@ -43,6 +43,9 @@
       "Unsocial classes are by clock time: weekday work between 20:00 and 06:00 is 'weekday night'; Saturday, Sunday and bank holidays are unsocial for the whole day.",
       "'unsocial_within_baseline_minutes' counts any unsocial minutes that fell within the first 22.5 hours of a week. It is listed for transparency; normally it is zero.",
       "Mean figures (per day, per week) are averaged over the days and weeks in which work was recorded, not over every calendar day or week in the period.",
+      "Monthly figures group each minute by the calendar month it was worked in. Threshold bands are always decided by the Monday-to-Sunday pay-week, so a week spanning a month boundary contributes minutes to both months carrying the bands its week assigned; months are never re-banded against a monthly baseline.",
+      "'above_contract_minutes' is everything beyond the contracted 22.5 hours a week, that is additional plus overtime. It does NOT include 'unsocial_within_baseline_minutes': those minutes fall inside the contracted 22.5 hours and so are not above contract, however they are enhanced.",
+      "Payments record how many minutes of above-contract work have been settled, never at what price. Each payment settles the oldest unsettled pay-week first; the total still owed does not depend on that ordering.",
       "This file contains hours only. Pay rates are determined separately."
     ]
   },
@@ -67,7 +70,8 @@
         "sunday": 2083,
         "bank_holiday": 0
       },
-      "unsocial_within_baseline_minutes": 225
+      "unsocial_within_baseline_minutes": 225,
+      "above_contract_minutes": 14193
     },
     "weekly": [
       {
@@ -257,6 +261,42 @@
         },
         "unsocial_within_baseline_minutes": 0,
         "flagged_segments": []
+      }
+    ],
+    "monthly": [
+      {
+        "month": "2026-06",
+        "day_count": 24,
+        "total_minutes": 13589,
+        "minutes_by_band": {
+          "contracted": 6370,
+          "additional": 3600,
+          "overtime": 3619
+        },
+        "minutes_by_class": {
+          "daytime": 12485,
+          "weekday_night": 151,
+          "saturday": 0,
+          "sunday": 953,
+          "bank_holiday": 0
+        }
+      },
+      {
+        "month": "2026-07",
+        "day_count": 23,
+        "total_minutes": 12754,
+        "minutes_by_band": {
+          "contracted": 5780,
+          "additional": 3452,
+          "overtime": 3522
+        },
+        "minutes_by_class": {
+          "daytime": 10731,
+          "weekday_night": 893,
+          "saturday": 0,
+          "sunday": 1130,
+          "bank_holiday": 0
+        }
       }
     ],
     "daily": [
@@ -1212,6 +1252,70 @@
         "bank_holiday": 0
       }
     },
+    "payments": {
+      "paid_minutes": 0,
+      "unpaid_minutes": 14193,
+      "overpaid_minutes": 0,
+      "paid_up_to": null,
+      "ledger": [],
+      "unpaid_weeks": [
+        {
+          "iso_week": "2026-W23",
+          "monday": "2026-06-01",
+          "extra_minutes": 2057,
+          "unpaid_minutes": 2057
+        },
+        {
+          "iso_week": "2026-W24",
+          "monday": "2026-06-08",
+          "extra_minutes": 2048,
+          "unpaid_minutes": 2048
+        },
+        {
+          "iso_week": "2026-W25",
+          "monday": "2026-06-15",
+          "extra_minutes": 1205,
+          "unpaid_minutes": 1205
+        },
+        {
+          "iso_week": "2026-W26",
+          "monday": "2026-06-22",
+          "extra_minutes": 1909,
+          "unpaid_minutes": 1909
+        },
+        {
+          "iso_week": "2026-W27",
+          "monday": "2026-06-29",
+          "extra_minutes": 1021,
+          "unpaid_minutes": 1021
+        },
+        {
+          "iso_week": "2026-W28",
+          "monday": "2026-07-06",
+          "extra_minutes": 40,
+          "unpaid_minutes": 40
+        },
+        {
+          "iso_week": "2026-W29",
+          "monday": "2026-07-13",
+          "extra_minutes": 712,
+          "unpaid_minutes": 712
+        },
+        {
+          "iso_week": "2026-W30",
+          "monday": "2026-07-20",
+          "extra_minutes": 3695,
+          "unpaid_minutes": 3695
+        },
+        {
+          "iso_week": "2026-W31",
+          "monday": "2026-07-27",
+          "extra_minutes": 1506,
+          "unpaid_minutes": 1506
+        }
+      ],
+      "warnings": []
+    },
     "integrity": {
       "conservation_ok": true,
       "partitions_ok": true,
@@ -1219,6 +1323,7 @@
       "banding_formula_ok": true,
       "crosstab_ok": true,
       "span_ok": true,
+      "monthly_ok": true,
       "total_raw_minutes": 26343,
       "total_segment_minutes": 26343,
       "unsocial_within_baseline_minutes": 225,
