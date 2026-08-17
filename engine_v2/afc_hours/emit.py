@@ -23,9 +23,10 @@ import json
 from datetime import datetime, timezone
 
 from afc_hours import core, rules
+from afc_hours import payments as payments_mod
 from afc_hours.core import ThresholdBand, UnsocialClass
 
-SCHEMA_VERSION = "1.1.0"
+SCHEMA_VERSION = "1.2.0"
 
 METHODOLOGY = [
     "All durations are in minutes. Divide by 60 for hours.",
@@ -39,6 +40,17 @@ METHODOLOGY = [
     "the first 22.5 hours of a week. It is listed for transparency; normally it is zero.",
     "Mean figures (per day, per week) are averaged over the days and weeks in which work "
     "was recorded, not over every calendar day or week in the period.",
+    "Monthly figures group each minute by the calendar month it was worked in. "
+    "Threshold bands are always decided by the Monday-to-Sunday pay-week, so a week "
+    "spanning a month boundary contributes minutes to both months carrying the bands "
+    "its week assigned; months are never re-banded against a monthly baseline.",
+    "'above_contract_minutes' is everything beyond the contracted 22.5 hours a week, "
+    "that is additional plus overtime. It does NOT include "
+    "'unsocial_within_baseline_minutes': those minutes fall inside the contracted "
+    "22.5 hours and so are not above contract, however they are enhanced.",
+    "Payments record how many minutes of above-contract work have been settled, never "
+    "at what price. Each payment settles the oldest unsettled pay-week first; the total "
+    "still owed does not depend on that ordering.",
     "This file contains hours only. Pay rates are determined separately.",
 ]
 
@@ -130,6 +142,52 @@ def _daily(days) -> list:
     ]
 
 
+def _monthly(months) -> list:
+    return [
+        {
+            "month": m.month,
+            "day_count": m.day_count,
+            "total_minutes": m.total_min,
+            "minutes_by_band": _by_band(m.minutes_by_band),
+            "minutes_by_class": _by_class(m.minutes_by_class),
+        }
+        for m in months
+    ]
+
+
+def _payments(rec) -> dict:
+    """Serialise a Reconciliation. Note there is NO note field: LedgerEntry has
+    none, so payment free-text cannot reach this file even by accident."""
+    return {
+        "paid_minutes": rec.paid_min,
+        "unpaid_minutes": rec.unpaid_min,
+        "overpaid_minutes": rec.overpaid_min,
+        "paid_up_to": rec.paid_up_to.isoformat() if rec.paid_up_to else None,
+        "ledger": [
+            {
+                "date": e.date.isoformat(),
+                "minutes_paid": e.minutes_paid,
+                "cumulative_paid_minutes": e.cumulative_paid_min,
+            }
+            for e in rec.ledger
+        ],
+        "unpaid_weeks": [
+            {
+                "iso_week": s.iso_week,
+                "monday": s.monday.isoformat(),
+                "extra_minutes": s.extra_min,
+                "unpaid_minutes": s.unpaid_min,
+            }
+            for s in rec.unpaid_weeks
+        ],
+        # Payment warnings live HERE and never in content.integrity.warnings.
+        # regen.sh, ingest-check.sh and deploy.sh all refuse to publish while
+        # integrity.warnings is non-empty; routing an overpayment in there
+        # would make the first real overpayment permanently unpublishable.
+        "warnings": list(rec.warnings),
+    }
+
+
 def _statistics(s) -> dict:
     return {
         "pct_by_band": _by_band(s.pct_by_band),
@@ -158,6 +216,7 @@ def _integrity(ig) -> dict:
         "banding_formula_ok": ig.banding_formula_ok,
         "crosstab_ok": ig.crosstab_ok,
         "span_ok": ig.span_ok,
+        "monthly_ok": ig.monthly_ok,
         "total_raw_minutes": ig.total_raw_min,
         "total_segment_minutes": ig.total_segment_min,
         "unsocial_within_baseline_minutes": ig.unsocial_within_baseline_min,
@@ -165,7 +224,7 @@ def _integrity(ig) -> dict:
     }
 
 
-def _content(result: core.HoursResult) -> dict:
+def _content(result: core.HoursResult, rec) -> dict:
     t = result.totals
     return {
         "period": {
@@ -179,8 +238,10 @@ def _content(result: core.HoursResult) -> dict:
             "minutes_by_band": _by_band(t.minutes_by_band),
             "minutes_by_class": _by_class(t.minutes_by_class),
             "unsocial_within_baseline_minutes": t.unsocial_within_baseline_min,
+            "above_contract_minutes": t.above_contract_min,
         },
         "weekly": _weekly(result.weeks),
+        "monthly": _monthly(result.months),
         "daily": _daily(result.days),
         "cross_tab": {b.value: _by_class(result.cross_tab[b]) for b in ThresholdBand},
         "cumulative": [
@@ -188,6 +249,7 @@ def _content(result: core.HoursResult) -> dict:
             for p in result.cumulative
         ],
         "statistics": _statistics(result.statistics),
+        "payments": _payments(rec),
         "integrity": _integrity(result.integrity),
     }
 
@@ -198,12 +260,24 @@ def build_payload(
     *,
     generated_at: datetime | None = None,
     subject: dict | None = None,
+    reconciliation=None,
 ) -> dict:
-    """HoursResult -> JSON-ready dict. `content` is pure in `result`; only
-    `meta.generated_at` varies with time (injectable for deterministic tests)."""
+    """HoursResult -> JSON-ready dict. `content` is pure in `result` and
+    `reconciliation`; only `meta.generated_at` varies with time (injectable for
+    deterministic tests).
+
+    `reconciliation=None` means "no payments recorded", not "unknown": it
+    reconciles against an empty payment list, so the payments block is always
+    present and always truthful. That is today's real state, and it keeps one
+    shape for the website to render rather than two."""
     if generated_at is None:
         generated_at = datetime.now(timezone.utc)
-    return {"meta": _meta(generated_at, subject), "content": _content(result)}
+    if reconciliation is None:
+        reconciliation = payments_mod.reconcile(result.weeks, [])
+    return {
+        "meta": _meta(generated_at, subject),
+        "content": _content(result, reconciliation),
+    }
 
 
 def to_json(
@@ -211,8 +285,14 @@ def to_json(
     *,
     generated_at: datetime | None = None,
     subject: dict | None = None,
+    reconciliation=None,
 ) -> str:
-    payload = build_payload(result, generated_at=generated_at, subject=subject)
+    payload = build_payload(
+        result,
+        generated_at=generated_at,
+        subject=subject,
+        reconciliation=reconciliation,
+    )
     # fixed-order dicts already; ensure_ascii=False keeps real characters; trailing newline.
     return json.dumps(payload, indent=2, ensure_ascii=False) + "\n"
 
@@ -223,6 +303,14 @@ def write_json(
     *,
     generated_at: datetime | None = None,
     subject: dict | None = None,
+    reconciliation=None,
 ) -> None:
     with open(path, "w", encoding="utf-8") as f:
-        f.write(to_json(result, generated_at=generated_at, subject=subject))
+        f.write(
+            to_json(
+                result,
+                generated_at=generated_at,
+                subject=subject,
+                reconciliation=reconciliation,
+            )
+        )

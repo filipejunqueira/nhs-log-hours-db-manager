@@ -8,7 +8,7 @@ Or with pytest:  pytest tests/test_emit.py
 import json
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from afc_hours import core, emit, rules  # noqa: E402
@@ -88,8 +88,93 @@ def test_integrity_block_all_true():
 
 
 def test_schema_version_is_current():
-    assert emit.SCHEMA_VERSION == "1.1.0"
-    assert _payload()["meta"]["schema_version"] == "1.1.0"
+    # Deliberate tripwire: bumping the schema MUST be a visible, chosen act.
+    # 1.2.0 added content.monthly, content.payments,
+    # totals.above_contract_minutes and integrity.monthly_ok (2026-08-10).
+    assert emit.SCHEMA_VERSION == "1.2.0"
+    assert _payload()["meta"]["schema_version"] == "1.2.0"
+
+
+# --- 1.2.0: monthly ---
+def test_monthly_block_conserves_the_total():
+    c = _payload()["content"]
+    assert [m["month"] for m in c["monthly"]] == ["2026-06", "2026-07"]
+    assert sum(m["total_minutes"] for m in c["monthly"]) == c["totals"]["total_minutes"]
+    for band in ("contracted", "additional", "overtime"):
+        assert (
+            sum(m["minutes_by_band"][band] for m in c["monthly"])
+            == c["totals"]["minutes_by_band"][band]
+        )
+
+
+def test_monthly_does_not_reband():
+    """A month is a re-slicing of week-banded minutes, never a fresh banding.
+    June 2026 holds more than 1350 contracted minutes precisely because each
+    of its weeks contributed its own baseline."""
+    c = _payload()["content"]
+    june = next(m for m in c["monthly"] if m["month"] == "2026-06")
+    assert june["minutes_by_band"]["contracted"] > 1350
+
+
+def test_integrity_reports_monthly_ok():
+    assert _payload()["content"]["integrity"]["monthly_ok"] is True
+
+
+# --- 1.2.0: above contract ---
+def test_above_contract_is_additional_plus_overtime():
+    t = _payload()["content"]["totals"]
+    assert (
+        t["above_contract_minutes"]
+        == t["minutes_by_band"]["additional"] + t["minutes_by_band"]["overtime"]
+    )
+
+
+def test_above_contract_excludes_unsocial_within_baseline():
+    """Those minutes sit inside the contracted 22.5 hours, so they are not
+    above contract however they are enhanced. The methodology must say so,
+    because an 'owed' panel invites the opposite assumption."""
+    p = _payload()
+    meth = p["meta"]["methodology"]
+    assert any(
+        "above_contract_minutes" in line and "unsocial_within_baseline" in line
+        for line in meth
+    )
+
+
+# --- 1.2.0: payments ---
+def test_payments_block_present_and_zero_by_default():
+    """No reconciliation passed means no payments recorded -- today's real
+    state -- not 'unknown'. The block is always present and always truthful."""
+    c = _payload()["content"]
+    pay = c["payments"]
+    assert pay["paid_minutes"] == 0
+    assert pay["unpaid_minutes"] == c["totals"]["above_contract_minutes"]
+    assert pay["overpaid_minutes"] == 0
+    assert pay["paid_up_to"] is None
+    assert pay["ledger"] == []
+    assert pay["warnings"] == []
+
+
+def test_payment_ledger_never_carries_a_note():
+    """Structural, not a convention: LedgerEntry has no note field at all, so
+    free text cannot reach a public page even by mistake -- exactly as core
+    drops the hours log's notes."""
+    from afc_hours import payments as pay_mod
+
+    res = core.compute_from_csv(REAL_LOG)
+    recon = pay_mod.reconcile(
+        res.weeks,
+        [pay_mod.Payment(date=date(2026, 8, 28), minutes_paid=600, note="July claim")],
+    )
+    c = emit.build_payload(res, generated_at=PINNED, reconciliation=recon)["content"]
+    assert c["payments"]["ledger"], "expected the payment to appear"
+    for entry in c["payments"]["ledger"]:
+        assert "note" not in entry
+    assert "note" not in pay_mod.LedgerEntry.__dataclass_fields__
+    # and the note is not hiding anywhere else in the file either
+    assert "July claim" not in emit.to_json(
+        res, generated_at=PINNED, reconciliation=recon
+    )
 
 
 def test_methodology_documents_mean_denominator():

@@ -25,7 +25,7 @@ before the baseline is met is still CLASSIFIED strictly, but FLAGGED
 
 import csv
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from enum import Enum
 
@@ -152,6 +152,22 @@ class WeekSummary:
 
 
 @dataclass(frozen=True)
+class MonthSummary:
+    """A calendar month. Months DO NOT RE-BAND: threshold bands are a property
+    of the Monday-Sunday pay-week and stay that way, so a month simply sums
+    minutes already banded by their week. A week straddling a month boundary
+    therefore contributes to both months carrying the bands its week assigned.
+    (Re-banding per month would invent a 22.5-hour monthly baseline that exists
+    in no rule.)"""
+
+    month: str  # "2026-06"
+    day_count: int
+    total_min: int
+    minutes_by_band: dict
+    minutes_by_class: dict
+
+
+@dataclass(frozen=True)
 class CumulativePoint:
     date: date
     cumulative_min: int
@@ -171,6 +187,12 @@ class Totals:
     minutes_by_band: dict
     minutes_by_class: dict
     unsocial_within_baseline_min: int
+    # Minutes worked beyond the contracted baseline, i.e. additional +
+    # overtime. Computed here so the browser never has to add two bands
+    # together to print the headline figure. NOT including
+    # unsocial_within_baseline_min: those minutes are inside the contracted
+    # 22.5 hours, so they are not "above contract" however they are enhanced.
+    above_contract_min: int
 
 
 @dataclass(frozen=True)
@@ -194,6 +216,7 @@ class Integrity:
     banding_formula_ok: bool  # I4 (the 22.5-first rule)
     crosstab_ok: bool  # I5
     span_ok: bool  # I6 (per-day worked minutes <= clock span)
+    monthly_ok: bool  # I7 (monthly figures conserve the total)
     total_raw_min: int
     total_segment_min: int
     unsocial_within_baseline_min: int
@@ -205,6 +228,7 @@ class HoursResult:
     period: Period
     days: tuple
     weeks: tuple
+    months: tuple  # tuple[MonthSummary, ...], calendar months
     segments: tuple  # all atomic Segments (audit trail)
     cross_tab: dict  # ThresholdBand -> {UnsocialClass -> minutes}
     totals: Totals
@@ -438,6 +462,36 @@ def band_week(week_segments: list) -> list:
     return atomic
 
 
+# ─── months ─────────────────────────────────────────────────────────────────
+def month_summaries(atomic: list) -> list:
+    """Atomic segments -> one MonthSummary per calendar month worked.
+
+    Groups by the month a minute was WORKED IN, summing bands the pay-week
+    already assigned. See MonthSummary: months never re-band."""
+    by_month: dict = {}
+    for s in atomic:
+        by_month.setdefault((s.date.year, s.date.month), []).append(s)
+
+    out: list = []
+    for year, month in sorted(by_month):
+        segs = by_month[(year, month)]
+        mbb = _band_dict()
+        mbc = _class_dict()
+        for s in segs:
+            mbb[s.threshold_band] += s.duration_min
+            mbc[s.unsocial_class] += s.duration_min
+        out.append(
+            MonthSummary(
+                month=f"{year:04d}-{month:02d}",
+                day_count=len({s.date for s in segs}),
+                total_min=sum(mbb.values()),
+                minutes_by_band=mbb,
+                minutes_by_class=mbc,
+            )
+        )
+    return out
+
+
 # ─── stats ──────────────────────────────────────────────────────────────────
 def _statistics(
     days: list, total_min: int, by_band: dict, by_class: dict, week_count: int
@@ -478,6 +532,7 @@ def _statistics(
 def _check_invariants(
     raw_total: int,
     weeks: list,
+    months: list,
     atomic: list,
     days: list,
     by_band: dict,
@@ -552,6 +607,16 @@ def _check_invariants(
         "I6 per-day worked-minutes-exceed-span failed (overlapping/duplicate periods?)"
     )
 
+    # I7 the monthly view conserves the total, on all three margins. Months are
+    # a re-slicing of the same atomic segments, so anything else means minutes
+    # were dropped or double-counted at a month boundary.
+    monthly = sum(m.total_min for m in months) == seg_total
+    for b in ThresholdBand:
+        monthly &= sum(m.minutes_by_band[b] for m in months) == by_band[b]
+    for c in UnsocialClass:
+        monthly &= sum(m.minutes_by_class[c] for m in months) == by_class[c]
+    assert monthly, "I7 monthly conservation failed"
+
     ubw = sum(w.unsocial_within_baseline_min for w in weeks)
     return Integrity(
         conservation_ok=conservation,
@@ -560,6 +625,7 @@ def _check_invariants(
         banding_formula_ok=banding,
         crosstab_ok=crosstab,
         span_ok=span,
+        monthly_ok=monthly,
         total_raw_min=raw_total,
         total_segment_min=seg_total,
         unsocial_within_baseline_min=ubw,
@@ -668,10 +734,13 @@ def compute(rows: list) -> HoursResult:
         cum += r.duration_min
         cumulative.append(CumulativePoint(r.date, cum))
 
+    months = month_summaries(atomic)
+
     raw_total = sum(r.duration_min for r in rows)
     integrity = _check_invariants(
         raw_total,
         week_summaries,
+        months,
         atomic,
         days,
         by_band,
@@ -688,6 +757,9 @@ def compute(rows: list) -> HoursResult:
         minutes_by_band=by_band,
         minutes_by_class=by_class,
         unsocial_within_baseline_min=integrity.unsocial_within_baseline_min,
+        above_contract_min=(
+            by_band[ThresholdBand.ADDITIONAL] + by_band[ThresholdBand.OVERTIME]
+        ),
     )
     statistics = _statistics(days, total_min, by_band, by_class, len(week_summaries))
     period = Period(start=min(r.date for r in days), end=max(r.date for r in days))
@@ -696,6 +768,7 @@ def compute(rows: list) -> HoursResult:
         period=period,
         days=tuple(days),
         weeks=tuple(week_summaries),
+        months=tuple(months),
         segments=tuple(atomic),
         cross_tab=cross_tab,
         totals=totals,
