@@ -12,7 +12,9 @@ be computed by anyone.
 The engine already knows the first term. This plan adds the second and does the
 subtraction in the engine, where every hours figure belongs.
 
-STATUS: AWAITING APPROVAL (`/plan-gate` opened 2026-08-10). Nothing implemented.
+STATUS: APPROVED and PART-DONE. The engine side landed 2026-08-17 (steps 1-5
+below); scripts and website remain (steps 6-8). The engine lock was lifted for
+the file copy and is back on.
 
 Covers **`docs/TODO.md` Now item 1** in full. Does not touch Now item 2
 (`scripts/update.sh`).
@@ -377,11 +379,16 @@ push, not after.
        `scratchpad/sb-engine`, the same pattern used on 2026-07-29. Criteria
        1–5 all evidenced there; see the worklog below. Doing this first means
        the lock is open for a verified file copy, not for development.
-3. [ ] **User lifts the engine lock** (remove the two `engine_v2/**` deny
-       lines from `.claude/settings.json`). ← THE ONLY BLOCKER
-4. [ ] Apply as **two commits** (user decision 2026-08-10, see below):
-       first the pure ruff-format sweep, then 1.2.0 on top.
-5. [ ] Regenerate, re-verify figures unmoved, **user restores the lock**.
+3. [x] **User lifted the engine lock** 2026-08-17.
+4. [x] Applied as **two commits** (user decision 2026-08-10, see below):
+       `9b8fdd1` the ruff-format sweep, `dca94c5` schema 1.2.0 on top.
+5. [x] Figures verified unmoved and **the lock is back on**. The regeneration
+       named here was deliberately NOT done: `regen.sh` cannot run against the
+       new engine until it passes a reconciliation, so it belongs to step 6.
+       Verified instead by building the payload in memory from the real log and
+       comparing it key for key against the committed `web_data.json` — see the
+       worklog below. Both copies of `web_data.json` are still schema 1.1.0 and
+       the live site is unchanged.
 6. [ ] Scripts → criterion 6. *(no lock, but depends on the engine landing —
        `regen.sh` passing a reconciliation to an engine that cannot accept one
        breaks immediately, so these cannot go first)*
@@ -440,3 +447,53 @@ Discovered while building, worth keeping:
   "pay run" and "payslip Aug" are the natural way to write a note and state no
   amount. The guard exists to keep figures out of a public file, not to police
   vocabulary.
+
+### Applied 2026-08-17 — steps 3 to 5
+
+Two commits, as decided: `9b8fdd1` formatting, `dca94c5` schema 1.2.0.
+
+**Correction to the formatting decision — it was measured on three files, not
+the directory.** The 458 lines recorded above are core 294 + emit 94 +
+test_emit 70, which is exactly the three files 1.2.0 changes. But APPLY.md's
+command was `ruff format engine_v2/afc_hours/ engine_v2/tests/`, whole
+directories, which reformats **six** files for **667** lines — it also hits
+`rules.py` (50), `test_core.py` (98) and `test_rules.py` (56), the three files
+APPLY.md itself lists as untouched. The extra churn on `rules.py` is exactly
+the hand-aligned-comment collapse this two-commit split exists to keep visible,
+and `rules.py` is the rules-as-law file the audit report's line references point
+at. Measured under ruff 0.15.20; `emit.py` and `test_emit.py` match the August
+counts to the line, so this is not version drift — the sandbox simply never
+measured the other three.
+
+**User decision 2026-08-17: format only the three files** 1.2.0 touches. That
+is what was approved, and the parked files were built to sit on exactly that
+base. Formatting the other three is deferred to its own job (now in
+`docs/TODO.md` Later). Known consequence: the global ruff hook will reformat
+`rules.py` the first time anything writes to it.
+
+**Evidence gathered on the real repo, not the sandbox:**
+
+- Formatting is behaviour-neutral: 67 + 29 green afterwards, and the payload
+  built in memory from the real log is identical to the committed
+  `web_data.json` key for key, `generated_at` aside.
+- All five parked files landed byte-identical (`diff -q` on each). Note `cp` is
+  aliased to `cp -i` here, which would have silently skipped the three
+  overwrites — `command cp -f` is required.
+- Today's ruff wants no change to the five parked files, so none of their
+  formatting leaked into the 1.2.0 commit.
+- Tests **116 engine + 29 characterisation**, exactly as predicted.
+- Criterion 4 holds on the real log: added `content.monthly`,
+  `content.payments`, `totals.above_contract_minutes`, `integrity.monthly_ok`;
+  removed nothing; **every pre-existing key unchanged**. 26 343 min over 9 weeks
+  to 31 July, 14 193 above contract. Zero payments gives paid 0, unpaid 14 193,
+  `paid_up_to: null`, empty ledger, no payment warnings.
+
+**Two facts step 6 and 7 need:**
+
+- The emitted key is **`above_contract_minutes`**. APPLY.md's table says
+  `Totals.above_contract_min`, which is the internal dataclass field — the JSON
+  key is the long form, and that is what `format.ts` must read.
+- `content.integrity` now carries **seven** `*_ok` keys (`monthly_ok` is new).
+  The "all six integrity checks true" wording in `regen.sh`, `ingest-check.sh`
+  and `deploy.sh` is now stale, as §5 anticipated. Their logic is fine — each
+  reads every `*_ok` key it finds.

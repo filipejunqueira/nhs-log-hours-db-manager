@@ -4,21 +4,34 @@ Single source of truth for what is done, what is next, and what is parked.
 Update this file as part of every session wrap-up (project-knowledge-updater
 reads and propagates; session snapshots should reference it, not duplicate it).
 
-Last updated: 2026-08-10 (session: hours-owed mechanism designed; PLAN.md
-written for schema 1.2.0, awaiting plan-gate and a deliberate lock-lift).
+Last updated: 2026-08-17 (session: the engine half of schema 1.2.0 landed —
+hours owed and the per-month breakdown. Scripts and website still to do.)
 
 ## Now (in order)
 
 1. **Schema 1.2.0 — hours OWED, plus the per-month breakdown.** Designed
    2026-08-10; full plan and success criteria in `PLAN.md` at the repo root.
-   The open design question ("where does the user record what payroll has
-   processed?") is ANSWERED: a Payments tab in the same workbook, one row per
-   payment event (`Date,MinutesPaid,HoursPaid,Note`), template written at
-   `data/payments_template.csv`. Payments settle the oldest unpaid week first;
-   the engine does the subtraction. User chose one lock-lift for both the
-   payments work and the monthly array rather than two (option (a)).
-   BLOCKED-BY: the user removing the `engine_v2/**` deny rules in
-   `.claude/settings.json` — deliberate, not casual, and restored afterwards.
+   **The ENGINE HALF IS DONE** (2026-08-17, commits `9b8fdd1` formatting and
+   `dca94c5` the change; lock lifted for the copy and back on). 116 engine + 29
+   characterisation tests green; no pre-existing figure moved.
+   What is LEFT, and it is not small — PLAN.md steps 6 to 8:
+   - **`regen.sh`** must pass `data/payments.csv` to the engine. Until it does,
+     nothing regenerates, so both copies of `web_data.json` are still schema
+     1.1.0 and the live site shows no owed figure. This is the next thing.
+   - **`ingest.sh`** forks all four stages for a payments CSV (PLAN.md §5 —
+     `probe()` and `drift_check()` both run the *hours* engine and would reject
+     a payments file outright).
+   - **`ingest-check.sh`** and **`deploy.sh`**: payments-export naming check, a
+     paid/unpaid line, the payments file re-parsed. All three keep gating on
+     `integrity.warnings` only — never payment warnings, or the first real
+     overpayment makes the site unpublishable.
+   - **Website 1.4.0**: `OwedPanel.vue`, `PaymentsTable.vue`,
+     `MonthlyTable.vue`, and `sumMinutes` deleted from format.ts in favour of
+     the engine's new `totals.above_contract_minutes`.
+   - All three scripts say "all six integrity checks true"; `integrity` now has
+     **seven** `*_ok` keys. One word each; their logic is unaffected.
+   - `notes/pending-engine-1.2.0/` is now a second copy of engine files that
+     have landed — delete it as part of step 6, per APPLY.md.
 2. **scripts/update.sh** — the remaining automation. The "copy to
    website/public" link is DONE (2026-07-29: regen.sh does it), so what is
    left is the headless xlsx→csv conversion and the cron wrapper
@@ -31,6 +44,16 @@ written for schema 1.2.0, awaiting plan-gate and a deliberate lock-lift).
   Note: an Excel file on the local machine cannot be reached by GitHub Actions;
   either a local cron/systemd timer drives the whole chain, or the source moves
   to Google Sheets/OneDrive first. Decide when we get there.
+- **ruff-format the rest of engine_v2** (needs a deliberate lock-lift):
+  `afc_hours/rules.py` (50 lines), `tests/test_core.py` (98) and
+  `tests/test_rules.py` (56) were left unformatted on 2026-08-17 — the sweep
+  that day covered only the three files schema 1.2.0 touched, which is what was
+  actually approved on 2026-08-10. Doing the rest is cosmetic and
+  behaviour-neutral, but `rules.py` is the rules-as-law file whose hand-aligned
+  comments the audit report's line references point at, so it wants its own
+  commit and a fresh look. Until then the global ruff hook will reformat
+  `rules.py` the first time anything writes to it — expect that diff and let it
+  happen in a commit of its own rather than folded into other work.
 - **Extra typo tripwires** (engine adjacent, needs a deliberate lock-lift):
   cross-check the ignored `Hours` column (×60 vs recomputed minutes);
   plausibility warnings (>14 h days, implausible weeks).
@@ -57,6 +80,33 @@ written for schema 1.2.0, awaiting plan-gate and a deliberate lock-lift).
 
 ## Done log
 
+- 2026-08-17: **engine schema 1.2.0 landed** — the engine can now say how many
+  extra hours are still owed, not just how many were worked. Applied as the two
+  commits decided on 2026-08-10: `9b8fdd1` the formatting sweep, `dca94c5` the
+  change. The lock was lifted for a verified file copy of the five files parked
+  in `notes/pending-engine-1.2.0/` and restored immediately after. New:
+  `afc_hours/payments.py` (ingest + a pure `reconcile()` drawing paid minutes
+  down against the weeks oldest-first), a per-month aggregation and invariant I7
+  in `core.py`, and the `monthly` / `payments` blocks plus
+  `totals.above_contract_minutes` in `emit.py`. Tests 116 + 29 green, up from
+  67 + 29, with the one intended break being the schema tripwire re-pinned to
+  1.2.0. Nothing published moved: added four keys, removed none, every
+  pre-existing key unchanged — 26 343 min over 9 weeks to 31 July, 14 193 above
+  contract, and with no payments file the block correctly reads paid 0, unpaid
+  14 193, `paid_up_to: null`. Both copies of `web_data.json` are untouched at
+  schema 1.1.0, so the live site is unchanged until `regen.sh` learns to pass a
+  reconciliation.
+  Three things worth keeping from doing it:
+  (a) APPLY.md's formatting command was wrong in reach — it formats whole
+  directories, six files and 667 lines, where the approved decision was three
+  files and 458. Caught before committing by re-measuring with
+  `ruff format --diff`; the extra three files are now a parked Later item.
+  (b) `cp` is aliased to `cp -i` in this environment, so APPLY.md's plain `cp`
+  would have silently skipped the three overwrites and left a half-applied
+  engine with a puzzling test failure. `command cp -f`, then `diff -q` each file.
+  (c) the emitted key is `above_contract_minutes`; APPLY.md's
+  `Totals.above_contract_min` is the internal field name. The website reads the
+  long form.
 - 2026-08-10: designed the hours-OWED mechanism (planning only; no engine or
   website code touched). The gap: nothing anywhere records what payroll has
   settled, so neither HR nor Vince can tell how many extra hours are actually
