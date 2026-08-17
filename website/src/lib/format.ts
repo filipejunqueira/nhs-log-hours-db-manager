@@ -42,14 +42,10 @@ export function minuteToClock(min: number): string {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`
 }
 
-/** Sum already-computed minute values for display (e.g. additional +
- *  overtime = "hours above contract"). Presentation-only and sanctioned by
- *  plan.md (option a, 2026-07-19): inputs are engine-banded figures, so this
- *  can never reclassify or re-band anything. Replaced by an engine-emitted
- *  above_contract_minutes at the next schema bump. */
-export function sumMinutes(...mins: number[]): number {
-  return mins.reduce((a, b) => a + b, 0)
-}
+// sumMinutes was removed at schema 1.2.0 (2026-08-17), as the 2026-07-19
+// decision that sanctioned it said it would be. The engine now emits
+// totals.above_contract_minutes, the only figure it ever added up. This file
+// is back to holding no arithmetic beyond minutes ÷ 60 and clock formatting.
 
 /** Typed against BANDS, so adding a band there without a label fails vue-tsc. */
 const BAND_LABELS: Record<(typeof BANDS)[number], string> = {

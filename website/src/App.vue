@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { useHoursData } from './composables/useHoursData'
 import SummaryHeader from './components/SummaryHeader.vue'
+import OwedPanel from './components/OwedPanel.vue'
+import PaymentsTable from './components/PaymentsTable.vue'
 import TotalsPanel from './components/TotalsPanel.vue'
+import MonthlyTable from './components/MonthlyTable.vue'
 import WeeklyTable from './components/WeeklyTable.vue'
 import DailyTable from './components/DailyTable.vue'
 import MethodologyPanel from './components/MethodologyPanel.vue'
@@ -42,8 +45,13 @@ const appVersion = __APP_VERSION__
       </div>
 
       <SummaryHeader :data="data" />
+      <div class="mt-8">
+        <OwedPanel :data="data" />
+      </div>
       <div class="mt-10 space-y-10">
         <TotalsPanel :data="data" />
+        <PaymentsTable :data="data" />
+        <MonthlyTable :data="data" />
         <WeeklyTable :data="data" />
         <DailyTable :data="data" />
         <MethodologyPanel :data="data" />

@@ -125,5 +125,33 @@ export function checkData(json: WebData): DataCheck {
     )
   }
 
+  // Schema 1.2.0 blocks. Deliberately NOT in REQUIRED_BLOCKS: that list is the
+  // fatal one, and a file predating 1.2.0 is still perfectly renderable — it
+  // simply cannot answer "how much is owed". Warn and hide the panel.
+  if (content.payments === undefined || content.payments === null) {
+    warnings.push(
+      "The data has no payments block, so this page cannot say how many hours are still " +
+        "unpaid. The hours worked are shown in full below. Regenerate web_data.json with " +
+        "an engine at schema 1.2.0 or later.",
+    )
+  }
+
+  if (content.monthly === undefined || content.monthly === null) {
+    warnings.push(
+      "The data has no monthly block, so the month-by-month table is not shown. Everything " +
+        "else on this page is unaffected.",
+    )
+  }
+
+  // The header reads this directly. Without the guard a file predating 1.2.0
+  // renders the headline figure as "NaN h".
+  if (totals.above_contract_minutes === undefined || totals.above_contract_minutes === null) {
+    warnings.push(
+      "The data does not say how many hours were worked above contract, so that figure is " +
+        "hidden rather than shown wrongly. Regenerate web_data.json with an engine at " +
+        "schema 1.2.0 or later.",
+    )
+  }
+
   return { fatal: null, warnings }
 }
