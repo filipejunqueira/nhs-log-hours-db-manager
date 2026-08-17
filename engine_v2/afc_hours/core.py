@@ -36,10 +36,11 @@ def _fmt_min(m: int) -> str:
     """Minutes-from-midnight -> HH:MM, for error messages."""
     return f"{m // 60:02d}:{m % 60:02d}"
 
+
 # --- minute constants, derived once from the law (exact integers) ---
-CONTRACTED_MIN = round(rules.CONTRACTED_WEEKLY_HOURS * 60)   # 1350
-FULLTIME_MIN = round(rules.FULLTIME_WEEKLY_HOURS * 60)       # 2250
-DAY_START_MIN = rules.DAY_START.hour * 60 + rules.DAY_START.minute      # 360
+CONTRACTED_MIN = round(rules.CONTRACTED_WEEKLY_HOURS * 60)  # 1350
+FULLTIME_MIN = round(rules.FULLTIME_WEEKLY_HOURS * 60)  # 2250
+DAY_START_MIN = rules.DAY_START.hour * 60 + rules.DAY_START.minute  # 360
 NIGHT_START_MIN = rules.NIGHT_START.hour * 60 + rules.NIGHT_START.minute  # 1200
 
 
@@ -52,17 +53,17 @@ class DayType(str, Enum):
 
 
 class UnsocialClass(str, Enum):
-    DAYTIME = "daytime"                 # weekday 06:00-20:00, no enhancement
-    WEEKDAY_NIGHT = "weekday_night"     # weekday 20:00-06:00 (AfC "night")
+    DAYTIME = "daytime"  # weekday 06:00-20:00, no enhancement
+    WEEKDAY_NIGHT = "weekday_night"  # weekday 20:00-06:00 (AfC "night")
     SATURDAY = "saturday"
     SUNDAY = "sunday"
     BANK_HOLIDAY = "bank_holiday"
 
 
 class ThresholdBand(str, Enum):
-    CONTRACTED = "contracted"   # 0 - 1350 min
-    ADDITIONAL = "additional"   # 1350 - 2250 min
-    OVERTIME = "overtime"       # 2250+ min
+    CONTRACTED = "contracted"  # 0 - 1350 min
+    ADDITIONAL = "additional"  # 1350 - 2250 min
+    OVERTIME = "overtime"  # 2250+ min
 
 
 def _band_dict() -> dict:
@@ -77,8 +78,9 @@ def _class_dict() -> dict:
 @dataclass(frozen=True)
 class RawDay:
     """One validated worked period from the CSV (notes dropped)."""
+
     date: date
-    start_min: int          # minutes from midnight
+    start_min: int  # minutes from midnight
     end_min: int
     provided_min: float | str | None = None  # CSV's own Minutes column, if any
     # (for cross-check; raw float so sub-minute mismatches warn, or the raw
@@ -92,6 +94,7 @@ class RawDay:
 @dataclass(frozen=True)
 class ClockSegment:
     """A worked piece after clock-boundary splitting; one unsocial class, no band yet."""
+
     date: date
     start_min: int
     end_min: int
@@ -105,6 +108,7 @@ class ClockSegment:
 @dataclass(frozen=True)
 class Segment:
     """Atomic rate-able unit: exactly one threshold band and one unsocial class."""
+
     date: date
     start_min: int
     end_min: int
@@ -116,6 +120,7 @@ class Segment:
 @dataclass(frozen=True)
 class FlaggedSegment:
     """An unsocial segment that fell inside the contracted baseline (needs justification)."""
+
     date: date
     start_min: int
     end_min: int
@@ -126,24 +131,24 @@ class FlaggedSegment:
 @dataclass(frozen=True)
 class DayRecord:
     date: date
-    iso_weekday: int                 # Mon=1 .. Sun=7
+    iso_weekday: int  # Mon=1 .. Sun=7
     day_type: DayType
-    start_min: int                   # earliest start that day
-    end_min: int                     # latest end that day
-    duration_min: int                # SUM of worked minutes (handles split shifts/gaps)
-    minutes_by_class: dict           # UnsocialClass -> minutes
+    start_min: int  # earliest start that day
+    end_min: int  # latest end that day
+    duration_min: int  # SUM of worked minutes (handles split shifts/gaps)
+    minutes_by_class: dict  # UnsocialClass -> minutes
 
 
 @dataclass(frozen=True)
 class WeekSummary:
-    iso_week: str                    # e.g. "2026-W23"
+    iso_week: str  # e.g. "2026-W23"
     monday: date
     day_count: int
     total_min: int
-    minutes_by_band: dict            # ThresholdBand -> minutes
-    minutes_by_class: dict           # UnsocialClass -> minutes
+    minutes_by_band: dict  # ThresholdBand -> minutes
+    minutes_by_class: dict  # UnsocialClass -> minutes
     unsocial_within_baseline_min: int
-    flagged_segments: tuple          # tuple[FlaggedSegment, ...]
+    flagged_segments: tuple  # tuple[FlaggedSegment, ...]
 
 
 @dataclass(frozen=True)
@@ -170,29 +175,29 @@ class Totals:
 
 @dataclass(frozen=True)
 class Statistics:
-    pct_by_band: dict                # ThresholdBand -> float (%)
-    pct_by_class: dict               # UnsocialClass -> float (%)
+    pct_by_band: dict  # ThresholdBand -> float (%)
+    pct_by_class: dict  # UnsocialClass -> float (%)
     mean_min_per_day: float
     mean_min_per_week: float
     mean_start_min: float
     mean_end_min: float
-    longest_day: tuple               # (date, minutes)
-    shortest_day: tuple              # (date, minutes)
-    days_touching_class: dict        # UnsocialClass -> day count
+    longest_day: tuple  # (date, minutes)
+    shortest_day: tuple  # (date, minutes)
+    days_touching_class: dict  # UnsocialClass -> day count
 
 
 @dataclass(frozen=True)
 class Integrity:
-    conservation_ok: bool            # I1
-    partitions_ok: bool              # I2
-    uniqueness_ok: bool              # I3
-    banding_formula_ok: bool         # I4 (the 22.5-first rule)
-    crosstab_ok: bool                # I5
-    span_ok: bool                    # I6 (per-day worked minutes <= clock span)
+    conservation_ok: bool  # I1
+    partitions_ok: bool  # I2
+    uniqueness_ok: bool  # I3
+    banding_formula_ok: bool  # I4 (the 22.5-first rule)
+    crosstab_ok: bool  # I5
+    span_ok: bool  # I6 (per-day worked minutes <= clock span)
     total_raw_min: int
     total_segment_min: int
     unsocial_within_baseline_min: int
-    warnings: tuple                  # tuple[str, ...]
+    warnings: tuple  # tuple[str, ...]
 
 
 @dataclass(frozen=True)
@@ -200,8 +205,8 @@ class HoursResult:
     period: Period
     days: tuple
     weeks: tuple
-    segments: tuple                  # all atomic Segments (audit trail)
-    cross_tab: dict                  # ThresholdBand -> {UnsocialClass -> minutes}
+    segments: tuple  # all atomic Segments (audit trail)
+    cross_tab: dict  # ThresholdBand -> {UnsocialClass -> minutes}
     totals: Totals
     statistics: Statistics
     cumulative: tuple
@@ -215,10 +220,10 @@ _MONTH_FORMATS = ("%d-%b-%Y", "%d-%b-%y", "%d %b %Y", "%d %B %Y", "%d-%B-%Y")
 def _parse_date(s: str, rownum: int) -> date:
     s = s.strip()
     try:
-        return date.fromisoformat(s)              # ISO YYYY-MM-DD (preferred)
+        return date.fromisoformat(s)  # ISO YYYY-MM-DD (preferred)
     except ValueError:
         pass
-    for fmt in _MONTH_FORMATS:                     # explicit month names
+    for fmt in _MONTH_FORMATS:  # explicit month names
         try:
             return datetime.strptime(s, fmt).date()
         except ValueError:
@@ -312,7 +317,9 @@ def ingest_csv(path: str) -> list:
                         provided = float(mv)
                     except ValueError:
                         provided = mv  # non-numeric: warned in compute(), never fatal
-            entries.append((i, RawDay(date=d, start_min=smin, end_min=emin, provided_min=provided)))
+            entries.append(
+                (i, RawDay(date=d, start_min=smin, end_min=emin, provided_min=provided))
+            )
 
     _reject_overlaps(entries)
     return [rd for _, rd in entries]
@@ -329,7 +336,9 @@ def _reject_overlaps(entries: list) -> None:
     for d, items in by_date.items():
         items.sort(key=lambda x: (x[1].start_min, x[1].end_min))
         for (ln_a, a), (ln_b, b) in zip(items, items[1:]):
-            if b.start_min < a.end_min:  # strict overlap; equal endpoints are contiguous, OK
+            if (
+                b.start_min < a.end_min
+            ):  # strict overlap; equal endpoints are contiguous, OK
                 if a.start_min == b.start_min and a.end_min == b.end_min:
                     raise ValueError(
                         f"Rows {ln_a} and {ln_b} ({d.isoformat()}): duplicate period "
@@ -369,9 +378,14 @@ def clock_segments(raw: RawDay) -> list:
         return [ClockSegment(raw.date, raw.start_min, raw.end_min, _WHOLEDAY_CLASS[dt])]
 
     # weekday: cut at 06:00 and 20:00 where they fall strictly inside the interval
-    cuts = sorted({raw.start_min, raw.end_min}
-                  | {b for b in (DAY_START_MIN, NIGHT_START_MIN)
-                     if raw.start_min < b < raw.end_min})
+    cuts = sorted(
+        {raw.start_min, raw.end_min}
+        | {
+            b
+            for b in (DAY_START_MIN, NIGHT_START_MIN)
+            if raw.start_min < b < raw.end_min
+        }
+    )
     out = []
     for a, b in zip(cuts, cuts[1:]):
         # day window is [06:00, 20:00); 20:00 onward and pre-06:00 are night
@@ -404,40 +418,56 @@ def band_week(week_segments: list) -> list:
     for seg in ordered:
         d = seg.duration_min
         # cumulative range this segment occupies: [cum, cum + d)
-        boundaries = sorted({cum, cum + d}
-                            | {t for t in (CONTRACTED_MIN, FULLTIME_MIN) if cum < t < cum + d})
+        boundaries = sorted(
+            {cum, cum + d}
+            | {t for t in (CONTRACTED_MIN, FULLTIME_MIN) if cum < t < cum + d}
+        )
         for p0, p1 in zip(boundaries, boundaries[1:]):
             off0, off1 = p0 - cum, p1 - cum
-            atomic.append(Segment(
-                date=seg.date,
-                start_min=seg.start_min + off0,
-                end_min=seg.start_min + off1,
-                duration_min=p1 - p0,
-                unsocial_class=seg.unsocial_class,
-                threshold_band=_band_for_cumulative(p0),
-            ))
+            atomic.append(
+                Segment(
+                    date=seg.date,
+                    start_min=seg.start_min + off0,
+                    end_min=seg.start_min + off1,
+                    duration_min=p1 - p0,
+                    unsocial_class=seg.unsocial_class,
+                    threshold_band=_band_for_cumulative(p0),
+                )
+            )
         cum += d
     return atomic
 
 
 # ─── stats ──────────────────────────────────────────────────────────────────
-def _statistics(days: list, total_min: int, by_band: dict, by_class: dict,
-                week_count: int) -> Statistics:
+def _statistics(
+    days: list, total_min: int, by_band: dict, by_class: dict, week_count: int
+) -> Statistics:
     day_count = len(days)
-    pct_band = {b: round(by_band[b] / total_min * 100, 2) if total_min else 0.0
-                for b in ThresholdBand}
-    pct_class = {c: round(by_class[c] / total_min * 100, 2) if total_min else 0.0
-                 for c in UnsocialClass}
+    pct_band = {
+        b: round(by_band[b] / total_min * 100, 2) if total_min else 0.0
+        for b in ThresholdBand
+    }
+    pct_class = {
+        c: round(by_class[c] / total_min * 100, 2) if total_min else 0.0
+        for c in UnsocialClass
+    }
     longest = max(days, key=lambda r: r.duration_min)
     shortest = min(days, key=lambda r: r.duration_min)
-    touch = {c: sum(1 for r in days if r.minutes_by_class.get(c, 0) > 0) for c in UnsocialClass}
+    touch = {
+        c: sum(1 for r in days if r.minutes_by_class.get(c, 0) > 0)
+        for c in UnsocialClass
+    }
     return Statistics(
         pct_by_band=pct_band,
         pct_by_class=pct_class,
         mean_min_per_day=round(total_min / day_count, 1) if day_count else 0.0,
         mean_min_per_week=round(total_min / week_count, 1) if week_count else 0.0,
-        mean_start_min=round(sum(r.start_min for r in days) / day_count, 1) if day_count else 0.0,
-        mean_end_min=round(sum(r.end_min for r in days) / day_count, 1) if day_count else 0.0,
+        mean_start_min=round(sum(r.start_min for r in days) / day_count, 1)
+        if day_count
+        else 0.0,
+        mean_end_min=round(sum(r.end_min for r in days) / day_count, 1)
+        if day_count
+        else 0.0,
         longest_day=(longest.date, longest.duration_min),
         shortest_day=(shortest.date, shortest.duration_min),
         days_touching_class=touch,
@@ -445,29 +475,42 @@ def _statistics(days: list, total_min: int, by_band: dict, by_class: dict,
 
 
 # ─── invariants ─────────────────────────────────────────────────────────────
-def _check_invariants(raw_total: int, weeks: list, atomic: list, days: list,
-                      by_band: dict, by_class: dict, cross_tab: dict,
-                      warnings: list, raw_rows: list) -> Integrity:
+def _check_invariants(
+    raw_total: int,
+    weeks: list,
+    atomic: list,
+    days: list,
+    by_band: dict,
+    by_class: dict,
+    cross_tab: dict,
+    warnings: list,
+    raw_rows: list,
+) -> Integrity:
     seg_total = sum(s.duration_min for s in atomic)
 
     # I1 conservation (overall + per week)
-    conservation = (seg_total == raw_total)
+    conservation = seg_total == raw_total
     for w in weeks:
-        conservation &= (sum(w.minutes_by_band.values()) == w.total_min)
+        conservation &= sum(w.minutes_by_band.values()) == w.total_min
     assert conservation, f"I1 conservation failed: raw={raw_total} segments={seg_total}"
 
     # I2 both partitions exhaust the total (overall + per week)
-    partitions = (sum(by_band.values()) == seg_total == sum(by_class.values()))
+    partitions = sum(by_band.values()) == seg_total == sum(by_class.values())
     for w in weeks:
-        partitions &= (sum(w.minutes_by_band.values()) == w.total_min
-                       == sum(w.minutes_by_class.values()))
+        partitions &= (
+            sum(w.minutes_by_band.values())
+            == w.total_min
+            == sum(w.minutes_by_class.values())
+        )
     assert partitions, "I2 partition exhaustion failed"
 
     # I3 uniqueness: every atomic segment is positive and singly-classed (structural)
-    uniqueness = all(s.duration_min > 0
-                     and isinstance(s.threshold_band, ThresholdBand)
-                     and isinstance(s.unsocial_class, UnsocialClass)
-                     for s in atomic)
+    uniqueness = all(
+        s.duration_min > 0
+        and isinstance(s.threshold_band, ThresholdBand)
+        and isinstance(s.unsocial_class, UnsocialClass)
+        for s in atomic
+    )
     assert uniqueness, "I3 uniqueness/positivity failed"
 
     # I4 THE 22.5-first rule, per week, as a computed formula
@@ -477,18 +520,22 @@ def _check_invariants(raw_total: int, weeks: list, atomic: list, days: list,
         expect_c = min(t, CONTRACTED_MIN)
         expect_a = max(0, min(t, FULLTIME_MIN) - CONTRACTED_MIN)
         expect_o = max(0, t - FULLTIME_MIN)
-        banding &= (w.minutes_by_band[ThresholdBand.CONTRACTED] == expect_c
-                    and w.minutes_by_band[ThresholdBand.ADDITIONAL] == expect_a
-                    and w.minutes_by_band[ThresholdBand.OVERTIME] == expect_o)
+        banding &= (
+            w.minutes_by_band[ThresholdBand.CONTRACTED] == expect_c
+            and w.minutes_by_band[ThresholdBand.ADDITIONAL] == expect_a
+            and w.minutes_by_band[ThresholdBand.OVERTIME] == expect_o
+        )
     assert banding, "I4 banding formula (22.5h-before-extra) failed"
 
     # I5 cross-tab reconciles to both margins
     crosstab = True
     for b in ThresholdBand:
-        crosstab &= (sum(cross_tab[b].values()) == by_band[b])
+        crosstab &= sum(cross_tab[b].values()) == by_band[b]
     for c in UnsocialClass:
-        crosstab &= (sum(cross_tab[b][c] for b in ThresholdBand) == by_class[c])
-    crosstab &= (sum(cross_tab[b][c] for b in ThresholdBand for c in UnsocialClass) == seg_total)
+        crosstab &= sum(cross_tab[b][c] for b in ThresholdBand) == by_class[c]
+    crosstab &= (
+        sum(cross_tab[b][c] for b in ThresholdBand for c in UnsocialClass) == seg_total
+    )
     assert crosstab, "I5 cross-tab reconciliation failed"
 
     # I6 per-day worked minutes cannot exceed the clock span, and per-day raw
@@ -501,14 +548,22 @@ def _check_invariants(raw_total: int, weeks: list, atomic: list, days: list,
     for rs in by_day.values():
         rs = sorted(rs, key=lambda r: (r.start_min, r.end_min))
         span &= all(a.end_min <= b.start_min for a, b in zip(rs, rs[1:]))
-    assert span, "I6 per-day worked-minutes-exceed-span failed (overlapping/duplicate periods?)"
+    assert span, (
+        "I6 per-day worked-minutes-exceed-span failed (overlapping/duplicate periods?)"
+    )
 
     ubw = sum(w.unsocial_within_baseline_min for w in weeks)
     return Integrity(
-        conservation_ok=conservation, partitions_ok=partitions, uniqueness_ok=uniqueness,
-        banding_formula_ok=banding, crosstab_ok=crosstab, span_ok=span,
-        total_raw_min=raw_total, total_segment_min=seg_total,
-        unsocial_within_baseline_min=ubw, warnings=tuple(warnings),
+        conservation_ok=conservation,
+        partitions_ok=partitions,
+        uniqueness_ok=uniqueness,
+        banding_formula_ok=banding,
+        crosstab_ok=crosstab,
+        span_ok=span,
+        total_raw_min=raw_total,
+        total_segment_min=seg_total,
+        unsocial_within_baseline_min=ubw,
+        warnings=tuple(warnings),
     )
 
 
@@ -549,18 +604,28 @@ def compute(rows: list) -> HoursResult:
         for s in wsegs:
             by_band[s.threshold_band] += s.duration_min
             by_class[s.unsocial_class] += s.duration_min
-            if s.threshold_band is ThresholdBand.CONTRACTED and s.unsocial_class is not UnsocialClass.DAYTIME:
-                flagged.append(FlaggedSegment(s.date, s.start_min, s.end_min,
-                                              s.duration_min, s.unsocial_class))
+            if (
+                s.threshold_band is ThresholdBand.CONTRACTED
+                and s.unsocial_class is not UnsocialClass.DAYTIME
+            ):
+                flagged.append(
+                    FlaggedSegment(
+                        s.date, s.start_min, s.end_min, s.duration_min, s.unsocial_class
+                    )
+                )
         iy, iw, _ = monday.isocalendar()
-        week_summaries.append(WeekSummary(
-            iso_week=f"{iy}-W{iw:02d}", monday=monday,
-            day_count=len({s.date for s in wsegs}),
-            total_min=sum(by_band.values()),
-            minutes_by_band=by_band, minutes_by_class=by_class,
-            unsocial_within_baseline_min=sum(f.duration_min for f in flagged),
-            flagged_segments=tuple(flagged),
-        ))
+        week_summaries.append(
+            WeekSummary(
+                iso_week=f"{iy}-W{iw:02d}",
+                monday=monday,
+                day_count=len({s.date for s in wsegs}),
+                total_min=sum(by_band.values()),
+                minutes_by_band=by_band,
+                minutes_by_class=by_class,
+                unsocial_within_baseline_min=sum(f.duration_min for f in flagged),
+                flagged_segments=tuple(flagged),
+            )
+        )
 
     # day records (aggregate atomic segments by date; handles split shifts)
     by_date: dict = {}
@@ -572,13 +637,17 @@ def compute(rows: list) -> HoursResult:
         mbc = _class_dict()
         for s in segs:
             mbc[s.unsocial_class] += s.duration_min
-        days.append(DayRecord(
-            date=d, iso_weekday=d.isoweekday(), day_type=day_type(d),
-            start_min=min(s.start_min for s in segs),
-            end_min=max(s.end_min for s in segs),
-            duration_min=sum(s.duration_min for s in segs),
-            minutes_by_class=mbc,
-        ))
+        days.append(
+            DayRecord(
+                date=d,
+                iso_weekday=d.isoweekday(),
+                day_type=day_type(d),
+                start_min=min(s.start_min for s in segs),
+                end_min=max(s.end_min for s in segs),
+                duration_min=sum(s.duration_min for s in segs),
+                minutes_by_class=mbc,
+            )
+        )
 
     # overall aggregates
     by_band = _band_dict()
@@ -600,21 +669,39 @@ def compute(rows: list) -> HoursResult:
         cumulative.append(CumulativePoint(r.date, cum))
 
     raw_total = sum(r.duration_min for r in rows)
-    integrity = _check_invariants(raw_total, week_summaries, atomic, days,
-                                  by_band, by_class, cross_tab, warnings, rows)
+    integrity = _check_invariants(
+        raw_total,
+        week_summaries,
+        atomic,
+        days,
+        by_band,
+        by_class,
+        cross_tab,
+        warnings,
+        rows,
+    )
 
     totals = Totals(
-        total_min=total_min, day_count=len(days), week_count=len(week_summaries),
-        minutes_by_band=by_band, minutes_by_class=by_class,
+        total_min=total_min,
+        day_count=len(days),
+        week_count=len(week_summaries),
+        minutes_by_band=by_band,
+        minutes_by_class=by_class,
         unsocial_within_baseline_min=integrity.unsocial_within_baseline_min,
     )
     statistics = _statistics(days, total_min, by_band, by_class, len(week_summaries))
     period = Period(start=min(r.date for r in days), end=max(r.date for r in days))
 
     return HoursResult(
-        period=period, days=tuple(days), weeks=tuple(week_summaries),
-        segments=tuple(atomic), cross_tab=cross_tab, totals=totals,
-        statistics=statistics, cumulative=tuple(cumulative), integrity=integrity,
+        period=period,
+        days=tuple(days),
+        weeks=tuple(week_summaries),
+        segments=tuple(atomic),
+        cross_tab=cross_tab,
+        totals=totals,
+        statistics=statistics,
+        cumulative=tuple(cumulative),
+        integrity=integrity,
     )
 
 

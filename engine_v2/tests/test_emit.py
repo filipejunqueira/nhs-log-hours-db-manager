@@ -14,8 +14,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from afc_hours import core, emit, rules  # noqa: E402
 
 REAL_LOG = os.environ.get("AFC_REAL_LOG") or os.path.join(
-    os.path.dirname(os.path.abspath(__file__)),
-    "fixtures", "hours_2026-07-14.csv")
+    os.path.dirname(os.path.abspath(__file__)), "fixtures", "hours_2026-07-14.csv"
+)
 PINNED = datetime(2026, 6, 26, 0, 0, 0, tzinfo=timezone.utc)
 
 
@@ -44,7 +44,9 @@ def test_meta_rules_match_the_law():
     m = _payload()["meta"]
     assert m["rules"]["day_window_start_minute"] == 360
     assert m["rules"]["night_window_start_minute"] == 1200
-    assert m["rules"]["bank_holidays"] == [d.isoformat() for d in sorted(rules.BANK_HOLIDAYS)]
+    assert m["rules"]["bank_holidays"] == [
+        d.isoformat() for d in sorted(rules.BANK_HOLIDAYS)
+    ]
     assert m["rules"]["bank_holiday_years_covered"] == [2026, 2027]
 
 
@@ -58,14 +60,22 @@ def test_content_totals_match_core():
     res = core.compute_from_csv(REAL_LOG)
     c = emit.build_payload(res, generated_at=PINNED)["content"]
     assert c["totals"]["total_minutes"] == res.totals.total_min == 16808
-    assert c["totals"]["minutes_by_band"] == {"contracted": 8528, "additional": 4540, "overtime": 3740}
+    assert c["totals"]["minutes_by_band"] == {
+        "contracted": 8528,
+        "additional": 4540,
+        "overtime": 3740,
+    }
     assert c["totals"]["minutes_by_class"]["sunday"] == 953
     assert c["totals"]["unsocial_within_baseline_minutes"] == 0
 
 
 def test_enum_dicts_use_string_keys():
     c = _payload()["content"]
-    assert set(c["totals"]["minutes_by_band"]) == {"contracted", "additional", "overtime"}
+    assert set(c["totals"]["minutes_by_band"]) == {
+        "contracted",
+        "additional",
+        "overtime",
+    }
     assert "sunday" in c["totals"]["minutes_by_class"]
     assert set(c["cross_tab"]) == {"contracted", "additional", "overtime"}
 
@@ -89,8 +99,15 @@ def test_methodology_documents_mean_denominator():
 
 def test_weekly_and_daily_present():
     c = _payload()["content"]
-    assert {w["iso_week"] for w in c["weekly"]} == {"2026-W23", "2026-W24", "2026-W25", "2026-W26",
-                                                    "2026-W27", "2026-W28", "2026-W29"}
+    assert {w["iso_week"] for w in c["weekly"]} == {
+        "2026-W23",
+        "2026-W24",
+        "2026-W25",
+        "2026-W26",
+        "2026-W27",
+        "2026-W28",
+        "2026-W29",
+    }
     assert len(c["daily"]) == 32
     assert len(c["cumulative"]) == 32
     assert c["cumulative"][-1]["cumulative_minutes"] == 16808
@@ -111,10 +128,12 @@ def test_only_timestamp_varies_with_time():
     p1 = emit.build_payload(res, generated_at=t1)
     p2 = emit.build_payload(res, generated_at=t2)
     assert p1["meta"]["generated_at"] != p2["meta"]["generated_at"]
-    assert p1["content"] == p2["content"]            # content is time-invariant
-    m1 = dict(p1["meta"]); m2 = dict(p2["meta"])
-    m1.pop("generated_at"); m2.pop("generated_at")
-    assert m1 == m2                                   # rest of meta identical too
+    assert p1["content"] == p2["content"]  # content is time-invariant
+    m1 = dict(p1["meta"])
+    m2 = dict(p2["meta"])
+    m1.pop("generated_at")
+    m2.pop("generated_at")
+    assert m1 == m2  # rest of meta identical too
 
 
 def test_output_is_valid_json():
@@ -122,8 +141,20 @@ def test_output_is_valid_json():
 
 
 # --- money-free guards ---
-_MONEY_KEY_TOKENS = {"salary", "gbp", "wage", "rate", "rates", "multiplier",
-                     "pension", "premium", "cost", "money", "gross", "net"}
+_MONEY_KEY_TOKENS = {
+    "salary",
+    "gbp",
+    "wage",
+    "rate",
+    "rates",
+    "multiplier",
+    "pension",
+    "premium",
+    "cost",
+    "money",
+    "gross",
+    "net",
+}
 
 
 def _all_keys(obj):
@@ -139,7 +170,7 @@ def _all_keys(obj):
 def test_no_money_keys_anywhere():
     p = _payload()
     for k in _all_keys(p):
-        tokens = set(k.lower().split("_"))          # whole-token match, not substring
+        tokens = set(k.lower().split("_"))  # whole-token match, not substring
         bad = _MONEY_KEY_TOKENS & tokens
         assert not bad, f"money-like key {k!r} (token {bad})"
 
@@ -152,8 +183,10 @@ def test_no_currency_symbol_in_output():
 def test_emit_module_does_not_import_money():
     # The structural guarantee is the import graph: emit must never import money.
     # (The word "money" legitimately appears in emit.py's docstring describing this.)
-    src = open(os.path.join(os.path.dirname(__file__), "..", "afc_hours", "emit.py"),
-               encoding="utf-8").read()
+    src = open(
+        os.path.join(os.path.dirname(__file__), "..", "afc_hours", "emit.py"),
+        encoding="utf-8",
+    ).read()
     for line in src.splitlines():
         s = line.strip()
         if (s.startswith("import ") or s.startswith("from ")) and "money" in s:
@@ -167,8 +200,9 @@ def test_subject_omitted_by_default_included_when_given():
 
 
 if __name__ == "__main__":
-    funcs = [v for k, v in sorted(globals().items())
-             if k.startswith("test_") and callable(v)]
+    funcs = [
+        v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)
+    ]
     passed = 0
     for fn in funcs:
         try:

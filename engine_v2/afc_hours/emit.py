@@ -53,7 +53,12 @@ def _by_class(d: dict) -> dict:
 
 
 def _iso(dt: datetime) -> str:
-    return dt.astimezone(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    return (
+        dt.astimezone(timezone.utc)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z")
+    )
 
 
 # --- meta envelope (the law + methodology; no computed content) ---
@@ -86,25 +91,27 @@ def _meta(generated_at: datetime, subject: dict | None) -> dict:
 def _weekly(weeks) -> list:
     out = []
     for w in weeks:
-        out.append({
-            "iso_week": w.iso_week,
-            "monday": w.monday.isoformat(),
-            "day_count": w.day_count,
-            "total_minutes": w.total_min,
-            "minutes_by_band": _by_band(w.minutes_by_band),
-            "minutes_by_class": _by_class(w.minutes_by_class),
-            "unsocial_within_baseline_minutes": w.unsocial_within_baseline_min,
-            "flagged_segments": [
-                {
-                    "date": f.date.isoformat(),
-                    "start_minute": f.start_min,
-                    "end_minute": f.end_min,
-                    "duration_minutes": f.duration_min,
-                    "unsocial_class": f.unsocial_class.value,
-                }
-                for f in w.flagged_segments
-            ],
-        })
+        out.append(
+            {
+                "iso_week": w.iso_week,
+                "monday": w.monday.isoformat(),
+                "day_count": w.day_count,
+                "total_minutes": w.total_min,
+                "minutes_by_band": _by_band(w.minutes_by_band),
+                "minutes_by_class": _by_class(w.minutes_by_class),
+                "unsocial_within_baseline_minutes": w.unsocial_within_baseline_min,
+                "flagged_segments": [
+                    {
+                        "date": f.date.isoformat(),
+                        "start_minute": f.start_min,
+                        "end_minute": f.end_min,
+                        "duration_minutes": f.duration_min,
+                        "unsocial_class": f.unsocial_class.value,
+                    }
+                    for f in w.flagged_segments
+                ],
+            }
+        )
     return out
 
 
@@ -131,8 +138,14 @@ def _statistics(s) -> dict:
         "mean_minutes_per_week": s.mean_min_per_week,
         "mean_start_minute": s.mean_start_min,
         "mean_end_minute": s.mean_end_min,
-        "longest_day": {"date": s.longest_day[0].isoformat(), "minutes": s.longest_day[1]},
-        "shortest_day": {"date": s.shortest_day[0].isoformat(), "minutes": s.shortest_day[1]},
+        "longest_day": {
+            "date": s.longest_day[0].isoformat(),
+            "minutes": s.longest_day[1],
+        },
+        "shortest_day": {
+            "date": s.shortest_day[0].isoformat(),
+            "minutes": s.shortest_day[1],
+        },
         "days_touching_class": _by_class(s.days_touching_class),
     }
 
@@ -155,8 +168,10 @@ def _integrity(ig) -> dict:
 def _content(result: core.HoursResult) -> dict:
     t = result.totals
     return {
-        "period": {"start": result.period.start.isoformat(),
-                   "end": result.period.end.isoformat()},
+        "period": {
+            "start": result.period.start.isoformat(),
+            "end": result.period.end.isoformat(),
+        },
         "totals": {
             "total_minutes": t.total_min,
             "day_count": t.day_count,
@@ -168,16 +183,22 @@ def _content(result: core.HoursResult) -> dict:
         "weekly": _weekly(result.weeks),
         "daily": _daily(result.days),
         "cross_tab": {b.value: _by_class(result.cross_tab[b]) for b in ThresholdBand},
-        "cumulative": [{"date": p.date.isoformat(), "cumulative_minutes": p.cumulative_min}
-                       for p in result.cumulative],
+        "cumulative": [
+            {"date": p.date.isoformat(), "cumulative_minutes": p.cumulative_min}
+            for p in result.cumulative
+        ],
         "statistics": _statistics(result.statistics),
         "integrity": _integrity(result.integrity),
     }
 
 
 # --- public API ---
-def build_payload(result: core.HoursResult, *, generated_at: datetime | None = None,
-                  subject: dict | None = None) -> dict:
+def build_payload(
+    result: core.HoursResult,
+    *,
+    generated_at: datetime | None = None,
+    subject: dict | None = None,
+) -> dict:
     """HoursResult -> JSON-ready dict. `content` is pure in `result`; only
     `meta.generated_at` varies with time (injectable for deterministic tests)."""
     if generated_at is None:
@@ -185,14 +206,23 @@ def build_payload(result: core.HoursResult, *, generated_at: datetime | None = N
     return {"meta": _meta(generated_at, subject), "content": _content(result)}
 
 
-def to_json(result: core.HoursResult, *, generated_at: datetime | None = None,
-            subject: dict | None = None) -> str:
+def to_json(
+    result: core.HoursResult,
+    *,
+    generated_at: datetime | None = None,
+    subject: dict | None = None,
+) -> str:
     payload = build_payload(result, generated_at=generated_at, subject=subject)
     # fixed-order dicts already; ensure_ascii=False keeps real characters; trailing newline.
     return json.dumps(payload, indent=2, ensure_ascii=False) + "\n"
 
 
-def write_json(result: core.HoursResult, path: str, *, generated_at: datetime | None = None,
-               subject: dict | None = None) -> None:
+def write_json(
+    result: core.HoursResult,
+    path: str,
+    *,
+    generated_at: datetime | None = None,
+    subject: dict | None = None,
+) -> None:
     with open(path, "w", encoding="utf-8") as f:
         f.write(to_json(result, generated_at=generated_at, subject=subject))
