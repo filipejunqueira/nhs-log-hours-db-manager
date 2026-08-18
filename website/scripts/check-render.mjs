@@ -79,12 +79,16 @@ for (const sc of SCENARIOS) {
     // The sentence carrying accrued and paid. Read whole, so a markup change
     // cannot make this pass by matching nothing.
     const sentence = (await owed.locator('p.text-gray-700').first().innerText()).replace(/\s+/g, ' ')
-    const accrued = json.content.totals.above_contract_minutes ?? 0
+    const accrued = json.content.totals.above_contract_minutes
+    // A dash, not a zero, when the engine did not emit the key -- the panel
+    // must not claim 0 h were worked above contract while the headline says
+    // hours are owed. Mirrors what SummaryHeader shows for the same key.
+    const accruedText = accrued === undefined ? '— h' : `${hours(accrued)} h`
     check('paid figure appears in the owed sentence',
       sentence.includes(`${hours(pay.paid_minutes)} h`),
       `looking for "${hours(pay.paid_minutes)} h" in: ${sentence}`)
-    check('accrued figure appears in the owed sentence',
-      sentence.includes(`${hours(accrued)} h`), `looking for "${hours(accrued)} h"`)
+    check('accrued reads as a dash when the key is absent, else the figure',
+      sentence.includes(accruedText), `looking for "${accruedText}" in: ${sentence}`)
 
     const settledTo = (await owed.locator('dt:text-is("Settled up to") + dd').innerText()).trim()
     check('settled-up-to matches JSON paid_up_to',

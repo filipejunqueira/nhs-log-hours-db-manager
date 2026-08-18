@@ -12,6 +12,11 @@ const props = defineProps<{ data: WebData }>()
 
 const payments = props.data.content.payments
 const lastPayment = payments?.ledger.at(-1) ?? null
+// Undefined means a file predating 1.2.0. Show a dash, exactly as
+// SummaryHeader does for the same key: falling back to 0 here printed "Of the
+// 0.00 h worked above contract" directly beneath a headline saying hours were
+// owed, which is a page contradicting itself.
+const aboveContract = props.data.content.totals.above_contract_minutes
 </script>
 
 <template>
@@ -27,7 +32,7 @@ const lastPayment = payments?.ledger.at(-1) ?? null
       </p>
 
       <p class="mt-3 text-sm text-gray-700">
-        Of the {{ minutesToHours(data.content.totals.above_contract_minutes ?? 0) }} h worked
+        Of the {{ aboveContract === undefined ? '—' : minutesToHours(aboveContract) }} h worked
         above the contracted
         {{ minutesToHours(data.meta.contract.contracted_weekly_minutes) }} h a week,
         <span class="font-medium">{{ minutesToHours(payments.paid_minutes) }} h</span>
