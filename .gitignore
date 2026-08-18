@@ -13,3 +13,10 @@ __pycache__/
 
 # Audit session plan - explicitly excluded from commits by name
 audit/session_plan_reference_only_not_commit.md
+
+# LaTeX working area. tmp/ holds internal NHS documents used as formatting
+# references, and latex-cls is a symlink to another project. THIS REPO IS
+# PUBLIC -- neither must ever be committed. Added 2026-08-18 after both showed
+# up as untracked, one `git add -A` away from being published.
+tmp/
+latex-cls
