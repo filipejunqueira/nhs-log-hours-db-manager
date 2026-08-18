@@ -5,44 +5,12 @@ Update this file as part of every session wrap-up (project-knowledge-updater
 reads and propagates; session snapshots should reference it, not duplicate it).
 
 Last updated: 2026-08-18 (session: schema 1.2.0 went live, the pipeline learned
-to read the .xlsx workbook itself, and the log was brought up to 18 August.
-Now item 1 is CLOSED; only the cron wrapper is left of the automation.)
+to read the .xlsx workbook itself, the log was brought up to 18 August, and the
+staleness timer is installed and scheduled. THE NOW LIST IS EMPTY.)
 
 ## Now (in order)
 
-1. **Install the staleness timer** — yours to run, because it puts units in
-   `~/.config/systemd/user/`, outside this repo. **Both** units must be linked:
-
-       systemctl --user link /home/filipejunqueira/code/nhs-hour-log/scripts/systemd/nhs-log-staleness.service
-       systemctl --user enable --now /home/filipejunqueira/code/nhs-hour-log/scripts/systemd/nhs-log-staleness.timer
-
-   **Run these in your own terminal, not through Claude.** Claude's shell is
-   containerised with `HOME=/home/filipejunqueira/containers/claude-home`, so
-   `systemctl --user link` from there creates the symlink under the *container's*
-   home and your real user systemd never sees it. Confirmed 2026-08-18: the
-   command reported "Created symlink" and did nothing useful.
-
-   Full paths on purpose, no shell variable: run one at a time these are
-   separate shells, so a `U=...` set in one does not survive into the next and
-   `link` quietly fails on `/nhs-log-staleness.service`. And keep each command
-   on ONE line — a wrapped line gave "Too few arguments" and then tried to
-   execute the path.
-
-   **Linking the timer alone is not enough**, and it fails in a way that reads
-   like a broken unit rather than a missing step: `systemctl --user enable` on
-   an absolute path symlinks only *that* file, so the service the timer triggers
-   is never loaded and starting it gives
-   `Refusing to start, unit nhs-log-staleness.service to trigger not loaded`.
-   Found the hard way 2026-08-18.
-
-   Check it took:
-
-       systemctl --user list-timers nhs-log-staleness.timer
-       systemctl --user start nhs-log-staleness.service
-       journalctl --user -u nhs-log-staleness.service -n 20
-
-   The script and both units are built and tested. Until this is run, nothing
-   reminds you — everything else about it is done.
+*(empty — everything planned is done and live. See Later / parked below.)*
 
 ## Later / parked
 
@@ -95,6 +63,20 @@ Now item 1 is CLOSED; only the cron wrapper is left of the automation.)
 
 ## Done log
 
+- 2026-08-18 (last): **the staleness timer is installed and running** — next
+  elapse confirmed on the user's own machine, 2026-08-19 11:14 BST. Three
+  instruction bugs on the way there, all now written into the install steps
+  above because each failed in a way that looked like a broken unit rather than
+  a wrong command: (a) `systemctl --user enable` on an absolute path symlinks
+  only the file named, so the timer was enabled while the service it triggers
+  was never loaded; (b) a `U=...` shell variable does not survive into a
+  separately-run command, so the path expanded to nothing; (c) **Claude's shell
+  is containerised** with `HOME=/home/filipejunqueira/containers/claude-home`,
+  so a `systemctl --user link` suggested with the `!` prefix reported "Created
+  symlink" and put it somewhere the real user systemd never looks. Anything
+  writing to the real `~` has to be run by the user in their own terminal.
+  Also: long commands wrap in the terminal, which gave "Too few arguments" and
+  then tried to execute the unit file. Keep them short.
 - 2026-08-18 (last): **`scripts/update.sh` reconsidered and answered with a
   reminder instead.** Reading BUILD_NOTES §5 again after the workbook work, three
   of its four "for the daily cron to be real" caveats were already settled: the
