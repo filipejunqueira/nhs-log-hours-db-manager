@@ -10,13 +10,14 @@ Now item 1 is CLOSED; only the cron wrapper is left of the automation.)
 
 ## Now (in order)
 
-1. **scripts/update.sh** — the remaining automation. The "copy to
-   website/public" link is DONE (2026-07-29: regen.sh does it) and the
-   **headless xlsx→csv conversion is DONE too** (2026-08-18:
-   `scripts/xlsx_to_csv.py`, driven by `ingest.sh`), so what is left is only
-   the cron wrapper
-   (BUILD_NOTES §5 caveats: non-interactive git auth, failures made visible).
-   Committing and pushing stays deliberately manual — the push publishes.
+1. **Install the staleness timer** — one command, yours to run, because it
+   puts a unit in `~/.config/systemd/user/` outside this repo:
+
+       systemctl --user enable --now \
+         /home/filipejunqueira/code/nhs-hour-log/scripts/systemd/nhs-log-staleness.timer
+
+   The script and both units are built and tested (2026-08-18). Until this is
+   run, nothing reminds you — everything else about it is done.
 
 ## Later / parked
 
@@ -68,6 +69,39 @@ Now item 1 is CLOSED; only the cron wrapper is left of the automation.)
   Reconcile the wording, or add real tests, later (flagged 2026-07-21).
 
 ## Done log
+
+- 2026-08-18 (last): **`scripts/update.sh` reconsidered and answered with a
+  reminder instead.** Reading BUILD_NOTES §5 again after the workbook work, three
+  of its four "for the daily cron to be real" caveats were already settled: the
+  headless xlsx→csv conversion landed that same day, non-interactive git auth is
+  moot because publishing stays manual by decision, and the Pages source is
+  plainly working. Only "surface failures" was left.
+  That prompted the real question, which was not "how do we write the wrapper"
+  but "what can a timer usefully do here at all". The workbook only arrives in
+  `~/downloads` by hand and the push publishes to a public page, so a schedule
+  can neither fetch data nor put it out — the middle step it *could* automate is
+  already the single command `nhs-log-ingest`. The git history shows the real
+  cadence is 26 Jun, 19 Jul, 29 Jul, 2 Aug, 18 Aug: irregular, two to three
+  weeks. That is not a chore being avoided, it is a thing being forgotten.
+  **User decision: build a reminder, not an ingest-on-a-timer.**
+  `scripts/check-staleness.sh` plus a systemd user timer at 11:00 daily,
+  `Persistent=true` so a missed run fires on the next boot — which matters,
+  since a reminder that only works when the laptop happens to be awake would
+  miss exactly the weeks worth reminding about. It reports two different things
+  because they need different actions: the live page being behind (log some
+  days, ingest) and local data being ahead of live (already ingested, never
+  published).
+  **It is strictly read-only** — an HTTP GET and two JSON reads, no writes, no
+  staging, and it never runs the ingest. That was deliberate: a timer that ran
+  the ingest would rewrite `generated_at` in both copies of `web_data.json` on
+  every run and leave the working tree permanently dirty even when nothing had
+  changed. A reminder that edits your repo is not a reminder. Verified by
+  comparing `git status` before and after.
+  Six behaviours checked: fresh data stays silent and exits 0; a crossed
+  threshold notifies with the real figures; **an unreachable site exits 2 and is
+  never reported as staleness**; local-ahead-of-live gives the publish command
+  and does not also nag about staleness; nothing is written; shellcheck clean
+  and both units pass `systemd-analyze verify`.
 
 - 2026-08-18 (later): **the pipeline reads the spreadsheet itself, and the log
   is up to date to 18 August.** Now item 1 is closed. The spreadsheet exports

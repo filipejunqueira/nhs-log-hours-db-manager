@@ -38,7 +38,21 @@ Bind TS types to the REAL emitted web_data.json; it wins over the §2 sketch if 
 integrity panel. Gate on >= 1.1.0 (accept 1.x where minor >= 1), or guard each integrity field.
 
 ## 5. Automation is half-specified (patches §9 / scripts/update.sh)
-For the daily cron to be real:
+
+**Largely answered 2026-08-18, and not the way this section assumed.** Three of
+the four bullets below are settled: the headless conversion exists
+(`scripts/xlsx_to_csv.py`), non-interactive git auth is moot because publishing
+stays a manual act by decision, and the Pages source is set and working. The
+fourth -- surfacing failures -- became `scripts/check-staleness.sh`.
+
+There is no `update.sh` and deliberately so. A timer cannot fetch the workbook
+(it is downloaded by hand) and must not publish (the push is the deploy), so the
+only step left to automate was already one command. What was built instead is a
+read-only daily reminder that notices the published page has gone quiet. See
+`docs/TODO.md`'s Done log for the reasoning.
+
+The original list, kept because the caveats are still true of anything that
+*does* run on a schedule here:
   - xlsx -> csv must be headless/scriptable (e.g. libreoffice --headless --convert-to csv, or a
     Python xlsx reader). A manual "Save As CSV" cannot run in cron.
   - git push from cron needs non-interactive auth (gh token, SSH deploy key, or PAT) — not your

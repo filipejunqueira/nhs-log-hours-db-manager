@@ -1,0 +1,17 @@
+[Unit]
+Description=Daily check that the published working-hours log is not going stale
+
+[Timer]
+# Late morning, so the notification lands in a working day rather than
+# overnight where it would be dismissed unread.
+OnCalendar=*-*-* 11:00:00
+
+# The laptop is not always on at 11:00. Persistent=true runs the check on the
+# next boot if the moment was missed, which matters here: the whole point is
+# catching a gap of days, and a reminder that only fires when the machine
+# happens to be awake would miss exactly the weeks worth reminding about.
+Persistent=true
+RandomizedDelaySec=15m
+
+[Install]
+WantedBy=timers.target

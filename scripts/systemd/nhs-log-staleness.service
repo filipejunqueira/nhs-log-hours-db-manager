@@ -1,0 +1,21 @@
+[Unit]
+Description=Notice when the published working-hours log has gone quiet
+Documentation=file:///home/filipejunqueira/code/nhs-hour-log/scripts/check-staleness.sh
+
+[Service]
+Type=oneshot
+ExecStart=/home/filipejunqueira/code/nhs-hour-log/scripts/check-staleness.sh
+
+# The script exits 1 when it has something to report, which is a normal
+# outcome, not a fault -- without this every reminder would mark the unit
+# failed. Exit 2 (site unreachable) is deliberately NOT listed: a site that
+# stays unreachable should show up in `systemctl --user status`, and a laptop
+# that happened to be offline for one run corrects itself on the next.
+SuccessExitStatus=0 1
+
+# It only reads: an HTTP GET and two JSON files. Nothing it does needs write
+# access anywhere, so it is not given any.
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=true
+NoNewPrivileges=true
