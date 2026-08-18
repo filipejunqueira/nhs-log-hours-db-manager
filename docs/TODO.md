@@ -10,14 +10,28 @@ Now item 1 is CLOSED; only the cron wrapper is left of the automation.)
 
 ## Now (in order)
 
-1. **Install the staleness timer** — one command, yours to run, because it
-   puts a unit in `~/.config/systemd/user/` outside this repo:
+1. **Install the staleness timer** — yours to run, because it puts units in
+   `~/.config/systemd/user/`, outside this repo. **Both** units must be linked:
 
-       systemctl --user enable --now \
-         /home/filipejunqueira/code/nhs-hour-log/scripts/systemd/nhs-log-staleness.timer
+       U=/home/filipejunqueira/code/nhs-hour-log/scripts/systemd
+       systemctl --user link "$U/nhs-log-staleness.service"
+       systemctl --user enable --now "$U/nhs-log-staleness.timer"
 
-   The script and both units are built and tested (2026-08-18). Until this is
-   run, nothing reminds you — everything else about it is done.
+   **Linking the timer alone is not enough**, and it fails in a way that reads
+   like a broken unit rather than a missing step: `systemctl --user enable` on
+   an absolute path symlinks only *that* file, so the service the timer triggers
+   is never loaded and starting it gives
+   `Refusing to start, unit nhs-log-staleness.service to trigger not loaded`.
+   Found the hard way 2026-08-18.
+
+   Check it took:
+
+       systemctl --user list-timers nhs-log-staleness.timer
+       systemctl --user start nhs-log-staleness.service
+       journalctl --user -u nhs-log-staleness.service -n 20
+
+   The script and both units are built and tested. Until this is run, nothing
+   reminds you — everything else about it is done.
 
 ## Later / parked
 

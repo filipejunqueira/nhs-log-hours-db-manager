@@ -15,3 +15,9 @@ RandomizedDelaySec=15m
 
 [Install]
 WantedBy=timers.target
+
+# Installing: BOTH units must be linked. `systemctl --user enable` on an
+# absolute path symlinks only the file named, so linking just this timer leaves
+# the service it triggers unloaded and starting it fails with "Refusing to
+# start, unit nhs-log-staleness.service to trigger not loaded". See
+# docs/TODO.md for the two commands.
