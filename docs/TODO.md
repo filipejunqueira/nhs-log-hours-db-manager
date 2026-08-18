@@ -60,6 +60,26 @@ staleness timer is installed and scheduled. THE NOW LIST IS EMPTY.)
 
 ## Done log
 
+- 2026-08-19: **full-system review — no finding changes any published figure.**
+  Requested after the audit document compiled; report with all evidence at
+  `notes/reviews/2026-08-19_full-review.md`, plan archived at
+  `notes/plans/2026-08-19_full-review.md`. Centrepiece: an independent
+  reimplementation (minute-by-minute, no `afc_hours` import) agreed with the
+  engine on 92 of 92 figures from the workbook — totals, all bands and classes,
+  all 12 weeks, all 3 months, above-contract, and the 225 within-baseline
+  minutes, which were traced to their origin (Mon 20 July, 07:52–23:45, the 225
+  minutes after 20:00 all inside the week's first 1 350) and found individually
+  listed in `weekly[W30].flagged_segments`. Byte-level agreement across every
+  pipeline joint: workbook → CSVs → in-memory rebuild → committed JSON → live
+  page. 145 tests green, determinism shown, refusal-on-violation demonstrated,
+  I9 grep clean, 87 scenario checks pass, live DOM matches live JSON. Three
+  minor findings, all documentation-side, fixes proposed not applied: the
+  spreadsheet's Hours column rounds up (22/58 rows, read by nothing; would
+  narrow the payments 0.5-min tolerance to a 0.1-min margin if the habit
+  spreads there); the project CLAUDE.md still says schema 1.1.0 and website
+  "not built yet"; the audit/README run command misspells the suite filename
+  (already parked).
+
 - 2026-08-18 (evening): **the audit document exists and compiles** —
   `tmp/afc_hours_record_2026-08-18.tex`, nine sections, written for Vince and
   payroll, fully identified, and deliberately NOT committed (the repo is public;
