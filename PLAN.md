@@ -12,9 +12,20 @@ be computed by anyone.
 The engine already knows the first term. This plan adds the second and does the
 subtraction in the engine, where every hours figure belongs.
 
-STATUS: APPROVED and PART-DONE. The engine side landed 2026-08-17 (steps 1-5
-below); scripts and website remain (steps 6-8). The engine lock was lifted for
-the file copy and is back on.
+STATUS: APPROVED and PART-DONE, five commits deep and **unpushed**. The engine
+landed 2026-08-17 (steps 1-5), and `regen.sh` (step 6a) and website 1.4.0
+(step 7a) landed the same day. The engine lock was lifted for the file copy and
+is back on.
+
+**What is left, and nothing else:** step **7b, the rendered-page check** — the
+one criterion still unevidenced, specified in §7 — and then step **8, the
+push**. The payments-aware `ingest.sh` / `ingest-check.sh` / `deploy.sh`
+(step 6b) is deliberately deferred *past* the push; the deviation and the risk
+it accepts are set out in "Decisions 2026-08-18".
+
+Nothing published has moved. Both copies of `web_data.json` are at schema 1.2.0
+in git, but `main` is five commits ahead of `origin`, so the live page still
+serves the 1.1.0 data and shows no owed figure.
 
 Covers **`docs/TODO.md` Now item 1** in full. Does not touch Now item 2
 (`scripts/update.sh`).
@@ -213,6 +224,9 @@ Every new key checked against the money-token list: none collide.
 
 ## 5. Scripts
 
+**Status: `regen.sh` is DONE (2026-08-17, commit `f36e2a3`). The other three are
+step 6b, deferred past the push — see "Decisions 2026-08-18".**
+
 - **`regen.sh`** — pass `data/payments.csv` (if present) to the engine; add
   paid/unpaid/owed to the printed check block. Keep the build-into-`.tmp`
   discipline exactly as it is. Its fail condition stays `integrity.warnings`
@@ -249,6 +263,9 @@ Every new key checked against the money-token list: none collide.
 
 ## 6. Website (app version 1.4.0)
 
+**Status: DONE (2026-08-17, commit `d1e0984`) — every bullet below is in the
+code. What remains is not in this list: the rendered-page check, now §7.**
+
 The schema gate accepts any 1.x with minor ≥ 1, so 1.2.0 passes with no change
 to `schema.ts`.
 
@@ -276,13 +293,125 @@ it already shows extra hours; this adds "of which unpaid".
 
 ---
 
+## 7. The rendered-page check (step 7b — the next thing)
+
+Criterion 7's last clause: *does the number on the page equal the number in the
+JSON?* Every other part of criterion 7 is evidenced. This is not.
+
+### Why it earns the effort rather than being waved through
+
+Verified 2026-08-18 by reading the code and the data, not inferred:
+
+- The live payments block reads `paid_minutes: 0`, `ledger: []`,
+  `overpaid_minutes: 0`, `paid_up_to: null`. So **every conditional in the owed
+  display has only ever rendered its zero arm** — `paid_up_to ?? 'nothing
+  settled yet'`, the `paid_minutes === 0` ternary, `v-if="overpaid_minutes > 0"`,
+  and `PaymentsTable.vue:38`'s `v-for="e in payments.ledger"`, which has never
+  produced a single row.
+- `regen.sh:38` calls `payments.ingest_payments_csv('data/payments.csv')`
+  against a file that does not exist — `engine_v2/data/` holds only the hours
+  CSV. The reconciliation path has never run end to end outside the Python
+  tests.
+- **A suspicion tested and killed, recorded so it is not re-suspected:**
+  `OwedPanel.vue` could have been reading `above_contract_minutes` where it
+  should read `unpaid_minutes` — identical today, divergent the moment payroll
+  pays anything. It is not. Line 26 binds `payments.unpaid_minutes`, correctly.
+
+### The six scenarios
+
+A scenario is a copy of `web_data.json` standing for one situation, served from
+`website/dist/` while the rendered page is read back.
+
+| scenario | how it is made | what it proves |
+|---|---|---|
+| `real` | today's `web_data.json`, untouched | normal render, no amber banner, 236.55 h owed |
+| `partial` | engine output for two payment rows summing to **5 400 min** | the subtraction reaches the page — paid 90.00 h, owed 146.55 h, accrued 236.55 h, a real `paid_up_to`, a part-settled week, and a ledger table with rows in it |
+| `overpaid` | engine output for one row of **15 000 min** | `overpaid_minutes` 807, owed floors at zero, and the `v-if` block nothing has ever rendered |
+| `no-payments` | `real` with `content.payments` deleted | the owed panel disappears entirely; amber banner |
+| `no-above-contract` | `real` with `totals.above_contract_minutes` deleted | the header shows a dash, not `NaN h` |
+| `no-monthly` | `real` with `content.monthly` deleted | the monthly table copes |
+
+The last three stand in for a `web_data.json` from the 1.1.0 engine: still
+perfectly renderable, simply unable to say what is owed.
+
+**Two things settled 2026-08-18 so step 7b does not trip over its own spec:**
+
+- **Payment dates cannot disturb any figure.** `reconcile()` sets
+  `pool = paid_total` and walks *all* weeks oldest-first applying
+  `min(pool, extra)` (`payments.py:262-271`). The dates are used only to order
+  the ledger and build `cumulative_paid_min`. So the pinned July and August
+  dates are free choices and cannot move `paid_up_to 2026-06-21` — only the
+  5 400 total decides it.
+- **The `overpaid` scenario must expect NO amber banner.** `validate.ts` builds
+  its warnings solely from missing blocks and unrecognised band/class keys; it
+  never reads `content.payments.warnings` or `integrity.warnings`, so the
+  top-of-page banner does not fire on an overpayment. The reader is told all
+  the same, twice, inside the owed panel: `OwedPanel.vue:62-66` renders its own
+  sentence when `overpaid_minutes > 0`, and the list beneath it prints the
+  engine's warning text verbatim. Both confirmed rendering 2026-08-18. Leave it
+  that way — do not wire payment warnings into the top banner, for the same
+  reason the three scripts must never gate on them.
+
+**The partial and overpaid figures come from the engine, never from hand-editing
+the JSON.** Writing "paid 5 400, unpaid 8 793" by hand would check the page
+against a number I invented, which is exactly the circularity the cardinal rule
+exists to prevent.
+
+**5 400 is not arbitrary.** It reproduces the end-to-end case already
+hand-checked in the sandbox worklog below: owed 8 793 min, `paid_up_to
+2026-06-21`, W26 part-settled with 1 819 remaining, FIFO clearing W23+W24+W25
+exactly. `reconcile()` derives `paid_up_to` from the **weeks**, not from the
+payment dates (`payments.py:277-287` walks the settlements, stops at the first
+week still owing, and takes the Sunday of the last fully-settled week that had
+extra hours), so *any* split summing to 5 400 reproduces all three figures.
+Pinned anyway, so the ledger rows are deterministic:
+`2026-07-15, 3000, 50.00` and `2026-08-14, 2400, 40.00`.
+
+That gives the scenario a second job: if the landed engine does not reproduce the
+sandbox's numbers, the sandbox and the shipped engine have drifted. That is a
+stop-and-report, not a re-pin.
+
+### Rules for building them
+
+- **Nothing writes inside `engine_v2/`.** Build the scenarios by calling the
+  engine in Python and writing the JSON to the scratchpad — the same way step 5
+  built its payload in memory. Do **not** drop a temporary `payments.csv` into
+  `engine_v2/data/` and run `regen.sh`: that writes into the locked directory,
+  dirties both copies of `web_data.json` with a fresh `generated_at`, and risks
+  leaving a fake payment behind.
+- Running `regen.sh` against a real payments file *is* worth doing — it is the
+  last untested link in the chain — but as its own deliberate step with its own
+  cleanup, not folded into 7b.
+
+### Prerequisites — all verified 2026-08-18, none outstanding
+
+- `playwright` 1.62.1 present in `website/node_modules`.
+- Chromium **revision 1234** is what 1.62.1 asks for, and it is cached at
+  `.cache/ms-playwright/chromium-1234`. `chromium.launch()` succeeds and reports
+  browser version 151.0.7922.34. No `npx playwright install` needed.
+- All seven strings `check-render.mjs` matches on still exist in the components:
+  `owed-heading`, `payments-heading`, `monthly-heading`, `Hours above contract`,
+  `does not fully understand`, `Could not load`, `p.text-4xl`.
+
+### The script itself
+
+`website/scripts/check-render.mjs` exists, uncommitted, and **has never been
+executed once**. Its scenario path points at a dead `/tmp` scratchpad belonging
+to the session that wrote it, wiped when the laptop lost power on 2026-08-17.
+Treat its first green run as evidence about the script as much as about the
+page — in particular, its weeks-owing selector takes `.last()` of the tables
+under `payments-heading`, which assumes the ledger table is the first of two,
+and that is only true once the ledger has rows.
+
+---
+
 ## Success criteria
 
 1. **Zero payments works** — no `payments.csv` at all, and a header-only one,
    both produce `paid_minutes: 0`, `unpaid == above_contract_minutes`, an empty
    ledger, **`paid_up_to: null`**, and a rendering owed panel. *This is the only
    state that exists today, so it is criterion 1.*
-2. **The arithmetic** — on hand-built fixtures covering no payments / partial /
+2. **The arithmetic** — on hand-built cases covering no payments / partial /
    exact / overpaid: `unpaid == max(0, accrued − paid)` in every case;
    overpayment warns rather than failing; a row whose `HoursPaid` contradicts
    `MinutesPaid` is refused at ingest with the row named.
@@ -296,7 +425,7 @@ it already shows extra hours; this adds "of which unpaid".
    byte-identical before and after, on the real log. The diff is additions
    only. Baseline recorded 2026-08-10: **26 343 min over nine weeks, period
    ending 31 Jul**. (The engine tests pin 16 808 min against the *frozen
-   fixture* `hours_2026-07-14.csv`, not the live log — verified; those pins
+   sample* `hours_2026-07-14.csv`, not the live log — verified; those pins
    are untouched by this work.)
 5. **Nothing free-text is published** — no entry in `content.payments.ledger`
    carries a `note` key (checked by script, **not** by `grep -i note` on the
@@ -306,15 +435,19 @@ it already shows extra hours; this adds "of which unpaid".
    message naming the word.
 6. **Ingest and deploy** — a payments export in `~/downloads` is detected,
    archived without collision, and drift-checked; `deploy.sh` stages it; the
-   hours path is completely unaffected.
+   hours path is completely unaffected. **Deferred past the push (step 6b).**
+   It is not a precondition for publishing figures that are already computed;
+   it becomes required the moment a first payment is recorded. The consequence
+   knowingly accepted until then is §5's own words — *"today a payments export
+   in `~/downloads` is silently ignored"*.
 7. **Website** — `vue-tsc -b` clean (**not** `npx vue-tsc --noEmit`, which
-   checks zero files here), build passes, `sumMinutes` gone from the codebase,
-   and a headless-browser check of the owed panel against the raw JSON on three
-   fixtures: zero payments, partial payment, missing `payments` block.
-   *Prerequisite:* Playwright's previous install was a throwaway in a dead job
-   directory; the system libraries persist but the npm side must be redone.
-   Either repeat the scratch install, or — **user decision, deferred from
-   2026-07-21** — make Playwright a proper devDependency this time.
+   checks zero files here), build passes, `sumMinutes` gone from the codebase
+   (invariant I9): **all three done, commit `d1e0984`.** Outstanding: a
+   headless-browser check of the owed panel against the raw JSON, on the **six**
+   scenarios specified in §7 — not the three named here on 2026-08-10, which
+   were written before it was known what the components would branch on.
+   *Prerequisite resolved 2026-08-18:* Playwright is a devDependency and its
+   Chromium is cached and launches; see "Decisions 2026-08-18".
 8. **The reader test** — someone who has never seen the repo can answer "how
    many extra hours is he owed, and since when?" from the page alone.
 
@@ -387,13 +520,100 @@ push, not after.
        new engine until it passes a reconciliation, so it belongs to step 6.
        Verified instead by building the payload in memory from the real log and
        comparing it key for key against the committed `web_data.json` — see the
-       worklog below. Both copies of `web_data.json` are still schema 1.1.0 and
-       the live site is unchanged.
-6. [ ] Scripts → criterion 6. *(no lock, but depends on the engine landing —
-       `regen.sh` passing a reconciliation to an engine that cannot accept one
-       breaks immediately, so these cannot go first)*
-7. [ ] Website → criterion 7. *(same dependency)*
-8. [ ] Commit, push, user confirms live.
+       worklog below. *(Superseded the same day: `f36e2a3` regenerated both
+       copies at 1.2.0. The live site is still unchanged — the commits are
+       unpushed.)*
+6. [x] **6a — `regen.sh` passes a reconciliation.** Commit `f36e2a3`. Both
+       copies of `web_data.json` regenerated at schema 1.2.0; 236.55 h owed.
+7. [x] **7a — website 1.4.0.** Commit `d1e0984`. `OwedPanel`, `PaymentsTable`,
+       `MonthlyTable`, `sumMinutes` deleted, `validate.ts` warnings added.
+8. [x] **7b — the rendered-page check. DONE 2026-08-18, all 87 checks pass**
+       (worklog at the end). Specified in §7. In order:
+       1. Answer the one open question in "Decisions 2026-08-18": where the
+          scenario files live. Everything after this depends on it.
+       2. Build the six scenarios — three by deleting one block from today's
+          `web_data.json`, two from engine output for the pinned payment rows,
+          one the real file untouched. Nothing writes inside `engine_v2/`.
+       3. Check the `partial` scenario reproduces the sandbox's recorded figures:
+          owed 8 793 min, `paid_up_to 2026-06-21`, W26 with 1 819 remaining. A
+          mismatch means sandbox and shipped engine have drifted — stop and
+          report, do not re-pin.
+       4. Repoint `check-render.mjs` at wherever the scenarios now live (its
+          current path is a dead `/tmp` directory) and add the `partial` and
+          `overpaid` assertions: paid, owed and accrued read as three different
+          numbers on the page, the ledger table has rows, the overpaid block
+          renders, and owed never goes negative.
+       5. Run it against `vite preview` on port 4177. Record PASS/FAIL per
+          scenario in the worklog below.
+9. [ ] **8 — commit, push, user confirms live. THIS IS NOW THE NEXT THING.**
+       Gated on 7b alone; see the deviation in "Decisions 2026-08-18". Nothing
+       is committed yet — the working tree holds the scenario files, the check
+       script, the Playwright devDependency and these plan and TODO updates.
+10. [ ] **6b — payments-aware `ingest.sh`, `ingest-check.sh` and `deploy.sh`**
+       (§5). Deferred past the push; required before the first payment is
+       recorded. Carries the stale wording too: all three scripts say "all six
+       integrity checks true" and `integrity` has had **seven** `*_ok` keys
+       since I7 landed. One word each; their logic is unaffected.
+11. [ ] Archive this plan to `notes/plans/2026-08-10_hours-owed.md` once 6b
+       lands, per the project's own convention.
+
+### Decisions 2026-08-18 — one deviation and three smaller calls
+
+**1. The push is re-gated on criterion 7 alone. This deviates from step 8 as
+originally written**, and is recorded rather than done quietly.
+
+Step 8 said push after criteria 6 *and* 7. That was written on 2026-08-10,
+before the payments work split into an engine piece and a scripts piece landing
+weeks apart. Holding back a verified page for scripts that handle a file which
+does not yet exist is the wrong trade: criterion 6 governs the *next* ingest,
+not whether what is being published now is correct.
+
+**The risk this knowingly accepts**, in §5's own words: *"today a payments
+export in `~/downloads` is silently ignored."* Silently is the word that
+matters. Between the push and 6b landing, if a payments export is downloaded and
+`nhs-log-ingest` run, it reports success, the file is never archived, never
+reaches `engine_v2/data/payments.csv`, and the page keeps showing the full
+amount as owed. Nothing fails loudly. That is tolerable only while no payment
+has been received — today's state — so **6b must land before the first payment
+is recorded**. The trigger is that event, not a date.
+
+**2. Playwright stays a devDependency.** This plan offered two options
+(criterion 7, deferred from 2026-07-21); the working tree took this one and it
+is confirmed. The throwaway install has evaporated twice now and cost a
+session's work both times. Measured cost, not assumed: version 1.62.1 has no npm
+install script (`hasInstallScript: false` in the lockfile, empty `scripts` in
+the installed package), so CI's `npm ci` does **not** download browsers and the
+Pages deploy is unaffected — a few MB more and nothing else.
+
+**3. Fixture-building must not run `regen.sh` against a temporary
+`payments.csv`.** Reasons in §7. The end-to-end run is worth doing on its own
+terms; it is not part of 7b.
+
+**4. RESOLVED — the scenario files are COMMITTED**, under
+`website/scripts/scenarios/`. Six files, 196 KB. The alternative was generating
+them at run time from the current `web_data.json`, which keeps the repo lighter
+and can never drift from the current shape.
+
+What decided it: **step 7b.3's cross-check only holds while the data is the nine
+weeks to 31 July.** A generated `partial` would pay the same 5 400 minutes
+against a *larger* accrued total after the next ingest, so owed would come out
+different and the paid-up-to date could land on another week. The check would
+fail with nothing actually wrong, and read as engine drift — the wrong
+conclusion at the worst moment. Committed files keep that cross-check valid
+indefinitely.
+
+Two supporting reasons. The check now tests only the website: it needs no Python
+and no working engine, so an engine problem cannot break it. And committed files
+age *loudly* — at the next schema bump the `real` scenario starts raising the
+amber banner and trips its own "no banner" expectation, forcing a look, where a
+generator would quietly rebuild from the new shape and keep passing while
+covering less. That is the same reasoning as
+`test_emit.py::test_schema_version_is_current`, which is pinned precisely so it
+breaks on a bump.
+
+Noted, since `docs/TODO.md` Later says no test framework in `website/` unasked:
+six data files and one Node script is not vitest. That is a reading, not an
+assumption — flagged to the user when the choice was put.
 
 ### Decision 2026-08-10: formatting is its own commit
 
@@ -497,3 +717,93 @@ base. Formatting the other three is deferred to its own job (now in
   The "all six integrity checks true" wording in `regen.sh`, `ingest-check.sh`
   and `deploy.sh` is now stale, as §5 anticipated. Their logic is fine — each
   reads every `*_ok` key it finds.
+
+### Landed 2026-08-17 — steps 6a and 7a
+
+Two further commits the same day the engine landed. Neither is published: `main`
+is five commits ahead of `origin`.
+
+- **`f36e2a3` — `regen.sh` reconciles.** It reads
+  `engine_v2/data/payments.csv`, reconciles against the weeks, and hands the
+  result to `emit.write_json`. Payments are read *in the script* and passed to
+  `emit`, never into `core.compute()`, which takes rows only — its own docstring
+  calls that the structural guarantee that no flag can inflate the hours. A
+  missing payments file stays legal. The printed check block gained
+  above-contract, the month list, paid, owed, paid-up-to and payment warnings;
+  the fail condition still reads `integrity.warnings` **only**, so an
+  overpayment prints but never blocks publishing. Both copies of `web_data.json`
+  regenerated at 1.2.0 and byte-identical (sha `4b1401a1`); against the previous
+  committed JSON the only changes are the four added keys, three methodology
+  lines, the schema version and `generated_at`. Also deleted
+  `notes/pending-engine-1.2.0/`, which APPLY.md asks for at this step.
+- **`d1e0984` — website 1.4.0.** `OwedPanel`, `PaymentsTable`, `MonthlyTable`.
+  `sumMinutes` deleted, which **discharges invariant I9** — `format.ts` now
+  holds nothing but minutes ÷ 60 and clock formatting, and the header reads the
+  engine's `totals.above_contract_minutes` instead of adding up. `validate.ts`
+  gained warning-level checks for a missing `payments` block, a missing
+  `monthly` block and a missing `totals.above_contract_minutes`;
+  `REQUIRED_BLOCKS` is deliberately untouched, so a pre-1.2.0 file still
+  renders — it simply cannot say what is owed. Verified: `vue-tsc -b` clean,
+  production build passes, grep confirms no arithmetic outside `format.ts`, and
+  the built site serves 1.2.0 over `vite preview` showing **236.55 h owed**.
+
+### Still unevidenced after those two commits
+
+Criterion 7's rendered-page check, and only that. It is now §7 and step 7b.
+
+### Ran 2026-08-18 — step 7b, the rendered-page check
+
+**Result: 87 checks across six scenarios, ALL PASS.** `website/scripts/` now
+holds `check-render.mjs` and `scenarios/` with the six committed files.
+
+**The builder validates itself before building anything.** It first emits a
+control payload with no payments and compares it against the committed
+`engine_v2/web_data.json`: **identical**. So the in-memory build reproduces what
+`regen.sh` produced, and any scenario built the same way can be trusted. Nothing
+was written inside `engine_v2/` — the engine was called in Python, the payments
+CSVs were written to the scratchpad, and `git status` shows the engine untouched.
+
+**The `partial` scenario reproduces the sandbox exactly** — the cross-check step
+7b.3 asked for, and it passes on every figure: paid 5 400, unpaid 8 793,
+`paid_up_to 2026-06-21`, W26 with 1 819 still owing, 2 ledger rows. So the
+engine that shipped and the engine proven in the sandbox on 2026-08-10 agree.
+
+**What the payment scenarios showed on the page**, which nothing had ever
+rendered before:
+
+- `partial` — accrued 236.55 h, paid 90.00 h, owed 146.55 h read as three
+  different numbers, the ledger table produced its first ever rows, "settled up
+  to" printed a real date instead of "nothing settled yet", and the last-payment
+  cell matched the final ledger row.
+- `overpaid` — 15 000 min paid against 14 193 accrued: the owed headline floors
+  at `0.00 h`, the overpayment block renders 13.45 h, and the engine's warning
+  text appears verbatim in the list beneath it. No top-of-page amber banner, as
+  §7 predicted.
+
+**A selector bug in `check-render.mjs`, found and fixed before the run.** It
+took `.last()` of the tables under `payments-heading` to count weeks owing. That
+holds while a ledger table is present, but the `overpaid` scenario has a ledger
+and *no* weeks owing — so the ledger table becomes the last one and its single
+row would have been counted as a week still owing. Both tables are now anchored
+on their own column headings (`Running total`, `Still owing`). This is exactly
+the "the first green run is evidence about the script too" caveat in §7, and it
+earned its keep.
+
+**One real finding, NOT fixed — the user's call whether it belongs in this
+push.** In the `no-above-contract` scenario the page contradicts itself:
+the header tile correctly shows a dash, but `OwedPanel.vue:30` reads
+`data.content.totals.above_contract_minutes ?? 0` and so prints *"Of the 0.00 h
+worked above the contracted 22.50 h a week, 0.00 h have been settled so far"*
+directly beneath a headline saying **236.55 h** are owed. The `?? 0` fallback
+invents a zero where `SummaryHeader.vue:38` shows a dash; the two handle the
+same missing key differently. The one-line fix is to mirror the dash. Severity
+is low — it needs a pre-1.2.0 JSON served to a 1.4.0 site, and site and data
+deploy from the same commit, so this is the belt-and-braces case the plan
+already describes — but the sentence states something false, and the amber
+banner explains the dash rather than the sentence.
+
+Worth recording about the check itself: it derives every expectation from the
+scenario's own JSON, **including that `?? 0`**, which is why it passed the case
+above rather than catching it. A page-versus-JSON check agrees with the
+component wherever the component invents a fallback. Reading the output still
+found it.

@@ -4,34 +4,54 @@ Single source of truth for what is done, what is next, and what is parked.
 Update this file as part of every session wrap-up (project-knowledge-updater
 reads and propagates; session snapshots should reference it, not duplicate it).
 
-Last updated: 2026-08-17 (session: the engine half of schema 1.2.0 landed —
-hours owed and the per-month breakdown. Scripts and website still to do.)
+Last updated: 2026-08-18 (session: read-in after an interrupted chat, then
+PLAN.md brought up to date. The engine, regen.sh and website 1.4.0 have all
+landed and are unpushed; one criterion is left.)
 
 ## Now (in order)
 
 1. **Schema 1.2.0 — hours OWED, plus the per-month breakdown.** Designed
-   2026-08-10; full plan and success criteria in `PLAN.md` at the repo root.
-   **The ENGINE HALF IS DONE** (2026-08-17, commits `9b8fdd1` formatting and
-   `dca94c5` the change; lock lifted for the copy and back on). 116 engine + 29
-   characterisation tests green; no pre-existing figure moved.
-   What is LEFT, and it is not small — PLAN.md steps 6 to 8:
-   - **`regen.sh`** must pass `data/payments.csv` to the engine. Until it does,
-     nothing regenerates, so both copies of `web_data.json` are still schema
-     1.1.0 and the live site shows no owed figure. This is the next thing.
+   2026-08-10; full plan, success criteria and a step-by-step for what remains
+   in `PLAN.md` at the repo root.
+   **Three of the four pieces are DONE and sitting unpushed** — `main` is five
+   commits ahead of `origin`, so the live page still serves the 1.1.0 data and
+   shows no owed figure:
+   - **Engine** (2026-08-17, `9b8fdd1` formatting and `dca94c5` the change;
+     lock lifted for the copy and back on). 116 engine + 29 characterisation
+     tests green; no pre-existing figure moved.
+   - **`regen.sh`** (2026-08-17, `f36e2a3`) — reads `data/payments.csv`,
+     reconciles it against the weeks, hands the result to `emit`. Both copies
+     of `web_data.json` regenerated at schema 1.2.0, 236.55 h owed. Also
+     deleted `notes/pending-engine-1.2.0/`, as APPLY.md asked.
+   - **Website 1.4.0** (2026-08-17, `d1e0984`) — `OwedPanel.vue`,
+     `PaymentsTable.vue`, `MonthlyTable.vue`, and `sumMinutes` deleted from
+     format.ts in favour of the engine's `totals.above_contract_minutes`.
+   What is LEFT — PLAN.md steps 8 to 11, in that order:
+   - ~~The rendered-page check (PLAN.md §7, step 7b)~~ — **DONE 2026-08-18,
+     87 checks across six scenarios all pass.** The scenario files are
+     committed under `website/scripts/scenarios/` (reasoning in PLAN.md
+     "Decisions 2026-08-18" item 4). The `partial` scenario reproduces the
+     2026-08-10 sandbox figures exactly, so the shipped engine and the proven
+     one agree. Not yet committed to git.
+   - **PUSH (step 8). THIS IS THE NEXT THING** — deliberately re-gated on that
+     check alone; see "Decisions 2026-08-18" in PLAN.md for the deviation and
+     the risk it takes. The working tree holds the scenario files, the check
+     script, the Playwright devDependency and the PLAN/TODO updates; `main` is
+     five commits ahead of `origin` on top of that.
    - **`ingest.sh`** forks all four stages for a payments CSV (PLAN.md §5 —
      `probe()` and `drift_check()` both run the *hours* engine and would reject
-     a payments file outright).
+     a payments file outright). **Deferred past the push, but required before a
+     first payment is recorded**: until it lands, a payments export in
+     `~/downloads` is *silently* ignored — `nhs-log-ingest` reports success and
+     the payment never reaches the engine.
    - **`ingest-check.sh`** and **`deploy.sh`**: payments-export naming check, a
      paid/unpaid line, the payments file re-parsed. All three keep gating on
      `integrity.warnings` only — never payment warnings, or the first real
      overpayment makes the site unpublishable.
-   - **Website 1.4.0**: `OwedPanel.vue`, `PaymentsTable.vue`,
-     `MonthlyTable.vue`, and `sumMinutes` deleted from format.ts in favour of
-     the engine's new `totals.above_contract_minutes`.
-   - All three scripts say "all six integrity checks true"; `integrity` now has
-     **seven** `*_ok` keys. One word each; their logic is unaffected.
-   - `notes/pending-engine-1.2.0/` is now a second copy of engine files that
-     have landed — delete it as part of step 6, per APPLY.md.
+   - Both of those scripts still print "all six integrity checks true"
+     (`ingest-check.sh:70`, `deploy.sh:59`); `integrity` has had **seven**
+     `*_ok` keys since I7 landed. One word each; their logic is unaffected.
+     `regen.sh` prints no count and needs nothing.
 2. **scripts/update.sh** — the remaining automation. The "copy to
    website/public" link is DONE (2026-07-29: regen.sh does it), so what is
    left is the headless xlsx→csv conversion and the cron wrapper
@@ -71,15 +91,50 @@ hours owed and the per-month breakdown. Scripts and website still to do.)
   Note the failure mode it exposed: a snapshot 20 days stale described website
   1.2.0 when the repo was at 1.3.0. The ledger below is the record; a snapshot
   is only a photograph.
+- **`OwedPanel.vue:30` invents a zero where the header shows a dash** (found
+  2026-08-18 by the rendered-page check). It reads
+  `data.content.totals.above_contract_minutes ?? 0`, so a JSON without that key
+  renders "Of the 0.00 h worked above the contracted 22.50 h a week, 0.00 h have
+  been settled so far" directly beneath a headline saying 236.55 h are owed —
+  a page contradicting itself. `SummaryHeader.vue:38` handles the same missing
+  key correctly, showing "—". One-line fix: mirror the dash. Low severity (it
+  needs a pre-1.2.0 JSON served to a 1.4.0 site, and data and site deploy from
+  the same commit) but the sentence states something false. Deliberately NOT
+  folded into the 1.2.0 push — decide whether it rides along or gets its own
+  commit.
 - **Unverified test claim**: the 2026-07-19 Done-log entry below says
   useHoursData's schema gate was "unit-tested 11 cases," but no test
   framework or test file exists anywhere in `website/` (no vitest,
   no `@vue/test-utils`, no `*.spec.*`/`*.test.*`). Actual verification was
-  manual (`vite preview` + curl against a hand-crafted bad-schema fixture).
+  manual (`vite preview` + curl against a hand-crafted bad-schema file).
   Reconcile the wording, or add real tests, later (flagged 2026-07-21).
 
 ## Done log
 
+- 2026-08-17 (later): **the scripts and website halves of 1.2.0 landed too**,
+  in two more commits the same day. `f36e2a3` taught `regen.sh` to reconcile:
+  it reads `engine_v2/data/payments.csv`, reconciles against the weeks and
+  hands the result to `emit.write_json`. Payments are read in the script and
+  passed to `emit`, never into `core.compute()`, which takes rows only — its
+  docstring calls that the structural guarantee that no flag can inflate the
+  hours. A missing payments file stays legal, which is today's real state. The
+  printed block gained above-contract, months, paid, owed, paid-up-to and
+  payment warnings; the fail condition still reads `integrity.warnings` only,
+  so an overpayment prints but never blocks publishing. Both copies of
+  `web_data.json` regenerated at 1.2.0 and byte-identical (sha `4b1401a1`);
+  the only changes against the previous committed JSON are the four added
+  keys, three methodology lines, the schema version and `generated_at`.
+  `d1e0984` then put it on the page as website 1.4.0: `OwedPanel`,
+  `PaymentsTable`, `MonthlyTable`, and `sumMinutes` deleted — which
+  **discharges invariant I9**, leaving `format.ts` holding nothing but minutes
+  ÷ 60 and clock formatting, with the header reading the engine's
+  `totals.above_contract_minutes` instead of adding up. `validate.ts` gained
+  warning-level checks for a missing payments block, a missing monthly block
+  and a missing `above_contract_minutes`, with `REQUIRED_BLOCKS` deliberately
+  untouched so a pre-1.2.0 file still renders — it simply cannot say what is
+  owed. Verified: `vue-tsc -b` clean, build passes, grep confirms no arithmetic
+  outside `format.ts`, and the built site serves 1.2.0 over `vite preview`
+  showing 236.55 h owed. Neither commit is pushed.
 - 2026-08-17: **engine schema 1.2.0 landed** — the engine can now say how many
   extra hours are still owed, not just how many were worked. Applied as the two
   commits decided on 2026-08-10: `9b8fdd1` the formatting sweep, `dca94c5` the
@@ -161,7 +216,7 @@ hours owed and the per-month breakdown. Scripts and website still to do.)
   failed *ingest* can still leave the canonical CSV replaced and an export
   archived — those happen before regen runs. (d) `scripts/ingest-check.sh`
   added: runs ingest.sh then checks the result (published copy matches the
-  engine, integrity clean, export named correctly, frozen fixture and engine
+  engine, integrity clean, export named correctly, frozen sample data and engine
   code untouched). Never commits or pushes — prints the commands and stops.
   On a stop it says exactly what did and did not move. (e) `scripts/deploy.sh`
   added, replacing a stub: takes a commit message, re-checks that the served
@@ -183,7 +238,7 @@ hours owed and the per-month breakdown. Scripts and website still to do.)
   previously 0.9% / 0%). Cumulative chart plots hours rather than minutes so
   the axis reads 0/50/…/300 h, and gained a screen-reader summary — the
   running total appears in no table on the page. Verified: `vue-tsc -b` clean,
-  build passes, grep audit clean, three-fixture headless-browser check (real
+  build passes, grep audit clean, three-scenario headless-browser check (real
   data / unknown class / missing block). **Gotcha recorded: `npx vue-tsc
   --noEmit` checks ZERO files here** — the root tsconfig.json is a
   references-only solution file, so it always exits 0. Use `vue-tsc -b`.
@@ -240,7 +295,7 @@ hours owed and the per-month breakdown. Scripts and website still to do.)
   Live references in audit/ repointed. Rule confirmed: non-config
   documentation lives in docs/.
 - 2026-07-19 (later): session work committed on branch logic-audit-2026-07-06
-  as six focused commits (data adoption + fixture, F1 test repoint, F2–F4
+  as six focused commits (data adoption + sample data, F1 test repoint, F2–F4
   core fixes, F5/F6 docs + audit report, web_data regen, CONTINUATION.md
   removal). Engine lock RESTORED in .claude/settings.json (deny rules back;
   backup deleted). TODO-functionality proposal drafted at
