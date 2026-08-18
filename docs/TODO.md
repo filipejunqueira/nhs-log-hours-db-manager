@@ -16,10 +16,17 @@ Now item 1 is CLOSED; only the cron wrapper is left of the automation.)
        systemctl --user link /home/filipejunqueira/code/nhs-hour-log/scripts/systemd/nhs-log-staleness.service
        systemctl --user enable --now /home/filipejunqueira/code/nhs-hour-log/scripts/systemd/nhs-log-staleness.timer
 
-   Full paths on purpose, no shell variable: these get run one at a time, and
-   a `U=...` set in one invocation does not survive into the next, so `$U`
-   expands to nothing and `link` quietly fails on `/nhs-log-staleness.service`.
-   Also found the hard way 2026-08-18.
+   **Run these in your own terminal, not through Claude.** Claude's shell is
+   containerised with `HOME=/home/filipejunqueira/containers/claude-home`, so
+   `systemctl --user link` from there creates the symlink under the *container's*
+   home and your real user systemd never sees it. Confirmed 2026-08-18: the
+   command reported "Created symlink" and did nothing useful.
+
+   Full paths on purpose, no shell variable: run one at a time these are
+   separate shells, so a `U=...` set in one does not survive into the next and
+   `link` quietly fails on `/nhs-log-staleness.service`. And keep each command
+   on ONE line — a wrapped line gave "Too few arguments" and then tried to
+   execute the path.
 
    **Linking the timer alone is not enough**, and it fails in a way that reads
    like a broken unit rather than a missing step: `systemctl --user enable` on
