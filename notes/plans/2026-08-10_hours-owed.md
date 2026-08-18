@@ -837,3 +837,22 @@ it would catch it next time.
 
 **What is left of this plan:** step 6b only, plus archiving the plan itself.
 Everything the site publishes today is evidenced.
+
+---
+
+## Closed 2026-08-18
+
+Steps 1 to 9 are done and evidenced, and **schema 1.2.0 is live**: the public
+page answers "how many extra hours is he owed, and since when" with 236.55 h.
+Criteria 1 to 5, 7 and 8 are all evidenced above.
+
+**Step 10 (6b, criterion 6 — the payments-aware ingest scripts) is carved out
+into its own plan** rather than kept here. It is a self-contained piece of
+pipeline work with its own success criteria, it touches none of the engine or
+website code this plan covers, and nothing it does changes a published figure.
+Its trigger is unchanged and still stands: it must land before a first payment
+is recorded, because until then a payments export in `~/downloads` is silently
+ignored.
+
+Step 11 (archiving) is therefore done here, slightly earlier than this plan
+predicted — noted rather than left as a silent contradiction.

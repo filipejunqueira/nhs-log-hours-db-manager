@@ -4,9 +4,9 @@ Single source of truth for what is done, what is next, and what is parked.
 Update this file as part of every session wrap-up (project-knowledge-updater
 reads and propagates; session snapshots should reference it, not duplicate it).
 
-Last updated: 2026-08-18 (session: read-in after an interrupted chat, then
-PLAN.md brought up to date. The engine, regen.sh and website 1.4.0 have all
-landed and are unpushed; one criterion is left.)
+Last updated: 2026-08-18 (session: schema 1.2.0 went live, then the ingest
+pipeline learned to read the .xlsx workbook itself - both tabs, one download.
+Built and evidenced; the data update it enables is still to publish.)
 
 ## Now (in order)
 
@@ -37,23 +37,19 @@ landed and are unpushed; one criterion is left.)
      public page now says 236.55 h are owed**, confirmed in a headless browser
      against the deployed URL. Also shipped `992b9dd` website 1.4.1, the one
      fix the rendered-page check found.
-   - **`ingest.sh`** forks all four stages for a payments CSV (PLAN.md §5 —
-     `probe()` and `drift_check()` both run the *hours* engine and would reject
-     a payments file outright). **Deferred past the push, but required before a
-     first payment is recorded**: until it lands, a payments export in
-     `~/downloads` is *silently* ignored — `nhs-log-ingest` reports success and
-     the payment never reaches the engine.
-   - **`ingest-check.sh`** and **`deploy.sh`**: payments-export naming check, a
-     paid/unpaid line, the payments file re-parsed. All three keep gating on
-     `integrity.warnings` only — never payment warnings, or the first real
-     overpayment makes the site unpublishable.
-   - Both of those scripts still print "all six integrity checks true"
-     (`ingest-check.sh:70`, `deploy.sh:59`); `integrity` has had **seven**
-     `*_ok` keys since I7 landed. One word each; their logic is unaffected.
-     `regen.sh` prints no count and needs nothing.
+   - ~~payments-aware ingest scripts~~ — **DONE 2026-08-18, and better than
+     planned.** The spreadsheet exports one tab per CSV but downloads whole, so
+     the pipeline now reads the **`.xlsx` workbook itself** (`ced0012`,
+     `f495a41`, `447d17d`). `scripts/xlsx_to_csv.py` converts both tabs to the
+     CSVs the engine already accepts; everything downstream is unchanged and
+     the engine stays locked. That removes the silent failure outright — there
+     is no second export left to miss. Eight criteria evidenced in a throwaway
+     copy; see `PLAN.md`.
 2. **scripts/update.sh** — the remaining automation. The "copy to
-   website/public" link is DONE (2026-07-29: regen.sh does it), so what is
-   left is the headless xlsx→csv conversion and the cron wrapper
+   website/public" link is DONE (2026-07-29: regen.sh does it) and the
+   **headless xlsx→csv conversion is DONE too** (2026-08-18:
+   `scripts/xlsx_to_csv.py`, driven by `ingest.sh`), so what is left is only
+   the cron wrapper
    (BUILD_NOTES §5 caveats: non-interactive git auth, failures made visible).
    Committing and pushing stays deliberately manual — the push publishes.
 
@@ -96,6 +92,17 @@ landed and are unpushed; one criterion is left.)
   no `@vue/test-utils`, no `*.spec.*`/`*.test.*`). Actual verification was
   manual (`vite preview` + curl against a hand-crafted bad-schema file).
   Reconcile the wording, or add real tests, later (flagged 2026-07-21).
+
+## Now, pending a decision
+
+- **Publish the data update the new pipeline enables.** The workbook holds 58
+  rows to **2026-08-18**; the live page still shows 47 rows to 31 July. Ingested
+  in a copy it gives **32 055 min over 58 days, 16 210 min above contract,
+  270.17 h owed** (up from 236.55 h), with three months instead of two and no
+  historical drift. The hours CSV diff will also carry **12 cosmetically
+  reformatted rows** — the converter zero-pads the Start hour where the old file
+  was inconsistent; the engine reads both identically. This is a normal
+  `nhs-log-deploy`, and it changes what the public page says.
 
 ## Done log
 
