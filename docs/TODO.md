@@ -20,6 +20,15 @@ Now item 1 is CLOSED; only the cron wrapper is left of the automation.)
 
 ## Later / parked
 
+- **`data/payments_template.csv` is now redundant, and could mislead.** It was
+  written 2026-08-10 as the spec for the payments input, back when the plan was
+  to export that tab to its own CSV. Since 2026-08-18 the payments tab lives in
+  the workbook and `scripts/xlsx_to_csv.py` derives `engine_v2/data/payments.csv`
+  from it, so nothing reads the template any more. A future session could
+  reasonably mistake it for the live path. Decide whether to delete it or retitle
+  it as documentation of the column meanings — not deleted unasked, since it is
+  the only place the four columns are described for a human.
+
 - **Full automation**: export → ingest → regen → deploy on a ~7-day cadence.
   Note: an Excel file on the local machine cannot be reached by GitHub Actions;
   either a local cron/systemd timer drives the whole chain, or the source moves
