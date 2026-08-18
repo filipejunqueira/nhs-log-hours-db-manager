@@ -40,9 +40,6 @@ staleness timer is installed and scheduled. THE NOW LIST IS EMPTY.)
 - **Extra typo tripwires** (engine adjacent, needs a deliberate lock-lift):
   cross-check the ignored `Hours` column (×60 vs recomputed minutes);
   plausibility warnings (>14 h days, implausible weeks).
-- **`.tex` audit document**: methodology → pipeline → rules-as-law → six
-  invariants with proofs → audit history → reproduction commands. Assemble
-  largely from `AUDIT_BRIEF.md` and the audit reports.
 - **money.py (Part ii)** and the private financial view — after the dashboard.
 - ~~Schema 1.2.0 `above_contract_minutes`~~ — PROMOTED to Now item 1
   (2026-08-10): it is folded into the same lock-lift as the payments work,
@@ -62,6 +59,18 @@ staleness timer is installed and scheduled. THE NOW LIST IS EMPTY.)
   Reconcile the wording, or add real tests, later (flagged 2026-07-21).
 
 ## Done log
+
+- 2026-08-18 (evening): **the audit document exists and compiles** —
+  `tmp/afc_hours_record_2026-08-18.tex`, nine sections, written for Vince and
+  payroll, fully identified, and deliberately NOT committed (the repo is public;
+  `tmp/` is gitignored). Every figure was checked by script against
+  `web_data.json` and every rule against `rules.py`; no currency symbol, no
+  colleague name, no LaTeX construct the two reference documents lack. The user
+  compiled it with `awesome-latex`. It asks payroll one question: confirm the
+  Monday pay-week, which `rules.py` records as assumed and which decides the
+  additional/overtime split. Plan archived at
+  `notes/plans/2026-08-18_audit-document.md`. Note the TODO line had gone stale:
+  it said "six invariants" — the document records nine.
 
 - 2026-08-18 (last): **the staleness timer is installed and running** — next
   elapse confirmed on the user's own machine, 2026-08-19 11:14 BST. Three
