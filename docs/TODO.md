@@ -13,9 +13,13 @@ Now item 1 is CLOSED; only the cron wrapper is left of the automation.)
 1. **Install the staleness timer** — yours to run, because it puts units in
    `~/.config/systemd/user/`, outside this repo. **Both** units must be linked:
 
-       U=/home/filipejunqueira/code/nhs-hour-log/scripts/systemd
-       systemctl --user link "$U/nhs-log-staleness.service"
-       systemctl --user enable --now "$U/nhs-log-staleness.timer"
+       systemctl --user link /home/filipejunqueira/code/nhs-hour-log/scripts/systemd/nhs-log-staleness.service
+       systemctl --user enable --now /home/filipejunqueira/code/nhs-hour-log/scripts/systemd/nhs-log-staleness.timer
+
+   Full paths on purpose, no shell variable: these get run one at a time, and
+   a `U=...` set in one invocation does not survive into the next, so `$U`
+   expands to nothing and `link` quietly fails on `/nhs-log-staleness.service`.
+   Also found the hard way 2026-08-18.
 
    **Linking the timer alone is not enough**, and it fails in a way that reads
    like a broken unit rather than a missing step: `systemctl --user enable` on
