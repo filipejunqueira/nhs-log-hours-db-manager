@@ -33,11 +33,10 @@ landed and are unpushed; one criterion is left.)
      "Decisions 2026-08-18" item 4). The `partial` scenario reproduces the
      2026-08-10 sandbox figures exactly, so the shipped engine and the proven
      one agree. Not yet committed to git.
-   - **PUSH (step 8). THIS IS THE NEXT THING** — deliberately re-gated on that
-     check alone; see "Decisions 2026-08-18" in PLAN.md for the deviation and
-     the risk it takes. The working tree holds the scenario files, the check
-     script, the Playwright devDependency and the PLAN/TODO updates; `main` is
-     five commits ahead of `origin` on top of that.
+   - ~~PUSH (step 8)~~ — **DONE 2026-08-18. Schema 1.2.0 IS LIVE and the
+     public page now says 236.55 h are owed**, confirmed in a headless browser
+     against the deployed URL. Also shipped `992b9dd` website 1.4.1, the one
+     fix the rendered-page check found.
    - **`ingest.sh`** forks all four stages for a payments CSV (PLAN.md §5 —
      `probe()` and `drift_check()` both run the *hours* engine and would reject
      a payments file outright). **Deferred past the push, but required before a
@@ -91,17 +90,6 @@ landed and are unpushed; one criterion is left.)
   Note the failure mode it exposed: a snapshot 20 days stale described website
   1.2.0 when the repo was at 1.3.0. The ledger below is the record; a snapshot
   is only a photograph.
-- **`OwedPanel.vue:30` invents a zero where the header shows a dash** (found
-  2026-08-18 by the rendered-page check). It reads
-  `data.content.totals.above_contract_minutes ?? 0`, so a JSON without that key
-  renders "Of the 0.00 h worked above the contracted 22.50 h a week, 0.00 h have
-  been settled so far" directly beneath a headline saying 236.55 h are owed —
-  a page contradicting itself. `SummaryHeader.vue:38` handles the same missing
-  key correctly, showing "—". One-line fix: mirror the dash. Low severity (it
-  needs a pre-1.2.0 JSON served to a 1.4.0 site, and data and site deploy from
-  the same commit) but the sentence states something false. Deliberately NOT
-  folded into the 1.2.0 push — decide whether it rides along or gets its own
-  commit.
 - **Unverified test claim**: the 2026-07-19 Done-log entry below says
   useHoursData's schema gate was "unit-tested 11 cases," but no test
   framework or test file exists anywhere in `website/` (no vitest,
@@ -111,6 +99,36 @@ landed and are unpushed; one criterion is left.)
 
 ## Done log
 
+- 2026-08-18: **schema 1.2.0 went LIVE** — the public page now answers the
+  question this whole slice existed for: 236.55 h are owed, and since when.
+  Three commits. `4fc3036` built the rendered-page check that criterion 7 had
+  left unevidenced: six scenario files committed under
+  `website/scripts/scenarios/`, a `scripts/build-scenarios.py` that produces
+  them from the engine in memory without writing a byte inside `engine_v2/`,
+  and `website/scripts/check-render.mjs` reading the rendered DOM back against
+  each scenario's own JSON. 87 checks, all pass. `b261a15` recorded it in
+  PLAN.md and here. `992b9dd` shipped website 1.4.1, fixing the one thing the
+  check found.
+  Four things worth keeping from doing it:
+  (a) the builder validates itself before building — with no payments its
+  payload must equal the committed `web_data.json`, and it does, so the
+  scenarios are genuine engine output rather than hand-edited JSON, and
+  `f36e2a3`'s regeneration is confirmed by an independent path.
+  (b) the `partial` scenario pays 5 400 min, which reproduces the case
+  hand-checked in the sandbox on 2026-08-10 — owed 8 793, `paid_up_to`
+  2026-06-21, W26 holding 1 819 — so the shipped engine and the proven one
+  agree. That is why the scenarios are committed rather than generated: after
+  the next ingest the same 5 400 against a larger accrued total gives a
+  different answer, and the failure would read as engine drift when nothing is
+  wrong.
+  (c) the check had a real bug before its first run: it counted weeks owing by
+  taking `.last()` of the tables under `payments-heading`, which breaks on the
+  overpaid scenario, where a ledger exists and no weeks are owing — the ledger
+  table becomes the last one. Both tables now anchor on their column headings.
+  (d) the check passed the `?? 0` bug it was meant to catch, because it derived
+  its expectation with the same `?? 0` the component used. A page-versus-JSON
+  check agrees with the component wherever the component invents a fallback.
+  Reading the output found it; the assertion now pins the dash.
 - 2026-08-17 (later): **the scripts and website halves of 1.2.0 landed too**,
   in two more commits the same day. `f36e2a3` taught `regen.sh` to reconcile:
   it reads `engine_v2/data/payments.csv`, reconciles against the weeks and

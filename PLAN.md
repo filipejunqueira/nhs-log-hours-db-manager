@@ -545,13 +545,17 @@ push, not after.
           renders, and owed never goes negative.
        5. Run it against `vite preview` on port 4177. Record PASS/FAIL per
           scenario in the worklog below.
-9. [ ] **8 — commit, push, user confirms live. THIS IS NOW THE NEXT THING.**
-       Gated on 7b alone; see the deviation in "Decisions 2026-08-18". Nothing
-       is committed yet — the working tree holds the scenario files, the check
-       script, the Playwright devDependency and these plan and TODO updates.
+9. [x] **8 — PUSHED AND CONFIRMED LIVE 2026-08-18.** Three commits:
+       `4fc3036` the check machinery and the six scenarios, `b261a15` these
+       plan and TODO updates, `992b9dd` website 1.4.1 fixing what the check
+       found. The public page now reads **236.55 h owed** — verified in a
+       headless browser against the deployed URL, not just by fetching the
+       JSON: owed panel present, headline 236.55 h, "nothing settled yet",
+       header tile 236.55, two monthly rows, no amber banner, no page
+       errors.
 10. [ ] **6b — payments-aware `ingest.sh`, `ingest-check.sh` and `deploy.sh`**
-       (§5). Deferred past the push; required before the first payment is
-       recorded. Carries the stale wording too: all three scripts say "all six
+       (§5). **THIS IS NOW THE NEXT THING.** Deferred past the push; required
+       before the first payment is recorded. Carries the stale wording too: all three scripts say "all six
        integrity checks true" and `integrity` has had **seven** `*_ok` keys
        since I7 landed. One word each; their logic is unaffected.
 11. [ ] Archive this plan to `notes/plans/2026-08-10_hours-owed.md` once 6b
@@ -807,3 +811,29 @@ scenario's own JSON, **including that `?? 0`**, which is why it passed the case
 above rather than catching it. A page-versus-JSON check agrees with the
 component wherever the component invents a fallback. Reading the output still
 found it.
+
+### Pushed 2026-08-18 — step 8, and one fix the check earned
+
+`main` pushed to `origin`; GitHub Actions built and deployed. **Schema 1.2.0 is
+live and the page says 236.55 h are owed.** Confirmed twice: the deployed
+`web_data.json` reads schema 1.2.0 with `above_contract_minutes` 14 193 and the
+two monthly rows, and a headless browser pointed at the live URL found the owed
+panel rendering 236.55 h with no page errors and no amber banner.
+
+**The one thing the rendered-page check found is fixed and shipped**
+(`992b9dd`, website 1.4.1). `OwedPanel.vue` read `above_contract_minutes ?? 0`
+where `SummaryHeader.vue` shows a dash, so a pre-1.2.0 file rendered "Of the
+0.00 h worked above the contracted 22.50 h a week" beneath a headline saying
+236.55 h were owed. Both now show a dash. Belt-and-braces rather than a live
+bug — data and site deploy from the same commit, so it was unreachable in
+production — but the sentence stated something false.
+
+Worth keeping, because it says what this kind of check is *for*: the assertion
+did not catch it. `check-render.mjs` derived its expectation with the same
+`?? 0` the component used, so it agreed with the component and passed. **A
+page-versus-JSON check agrees with the component wherever the component invents
+a fallback.** Reading the output caught it. The assertion now pins the dash, so
+it would catch it next time.
+
+**What is left of this plan:** step 6b only, plus archiving the plan itself.
+Everything the site publishes today is evidenced.
