@@ -56,16 +56,44 @@ c = d['content']
 ig = c['integrity']
 oks = {k: v for k, v in ig.items() if k.endswith('_ok')}
 bad = [k for k, v in oks.items() if not v]
-print("PASS  all six integrity checks true" if not bad else f"FAIL  integrity: {bad}")
+# Counted, not spelled out: the count went from six to seven when I7 landed
+# with schema 1.2.0, and a hard-coded number goes stale again at the next one.
+print(f"PASS  all {len(oks)} integrity checks true" if not bad else f"FAIL  integrity: {bad}")
 print("PASS  no engine warnings" if not ig['warnings'] else f"FAIL  warnings: {ig['warnings']}")
 print(f"      about to publish: {c['totals']['total_minutes']} min over "
       f"{len(c['daily'])} days, to {c['period']['end']}")
+p = c.get('payments')
+if p:
+    print(f"      above contract {c['totals']['above_contract_minutes']} min; "
+          f"paid {p['paid_minutes']} min, OWED {p['unpaid_minutes']} min "
+          f"({p['unpaid_minutes']/60:.2f} h), paid up to {p['paid_up_to'] or 'nothing yet'}")
+    if p['overpaid_minutes']:
+        print(f"      overpaid by {p['overpaid_minutes']} min")
+    for w in p['warnings']:
+        print(f"      payment note: {w}")
+# The exit status reads INTEGRITY ONLY. Payment warnings print above and are
+# deliberately never fatal: an overpayment is a true state of the world, and
+# refusing to publish on one would make the site permanently unpublishable the
+# first time payroll settles more than was accrued.
 sys.exit(1 if (bad or ig['warnings']) else 0)
 PY
 then
     :
 else
     fail=1
+fi
+
+if [ -f engine_v2/data/payments.csv ]; then
+    if PYTHONPATH=engine_v2 python3 -c "
+from afc_hours import payments
+ps = payments.ingest_payments_csv('engine_v2/data/payments.csv')
+print(f'PASS  payments file still parses ({len(ps)} payments)')
+"; then
+        :
+    else
+        echo "FAIL  engine_v2/data/payments.csv no longer parses"
+        fail=1
+    fi
 fi
 
 if [ "$fail" -ne 0 ]; then

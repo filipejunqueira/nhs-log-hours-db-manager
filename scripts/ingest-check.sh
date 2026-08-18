@@ -67,12 +67,27 @@ c = d['content']
 ig = c['integrity']
 oks = {k: v for k, v in ig.items() if k.endswith('_ok')}
 bad = [k for k, v in oks.items() if not v]
-print("PASS  all six integrity checks true" if not bad else f"FAIL  integrity: {bad}")
+# Counted, not spelled out: the count went from six to seven when I7 landed
+# with schema 1.2.0, and a hard-coded number goes stale again at the next one.
+print(f"PASS  all {len(oks)} integrity checks true" if not bad else f"FAIL  integrity: {bad}")
 print("PASS  no engine warnings" if not ig['warnings'] else f"FAIL  warnings: {ig['warnings']}")
 print(f"      schema {d['meta']['schema_version']}, "
       f"{c['period']['start']} to {c['period']['end']}")
 print(f"      {c['totals']['total_minutes']} min over {len(c['daily'])} days")
 print(f"      bands {c['totals']['minutes_by_band']}")
+p = c.get('payments')
+if p:
+    print(f"      above contract {c['totals']['above_contract_minutes']} min; "
+          f"paid {p['paid_minutes']} min, OWED {p['unpaid_minutes']} min "
+          f"({p['unpaid_minutes']/60:.2f} h), paid up to {p['paid_up_to'] or 'nothing yet'}")
+    if p['overpaid_minutes']:
+        print(f"      overpaid by {p['overpaid_minutes']} min")
+    for w in p['warnings']:
+        print(f"      payment note: {w}")
+# The exit status reads INTEGRITY ONLY. Payment warnings print above and are
+# deliberately never fatal: an overpayment is a true state of the world, and
+# refusing to publish on one would make the site permanently unpublishable the
+# first time payroll settles more than was accrued.
 sys.exit(1 if (bad or ig['warnings']) else 0)
 PY
 then
@@ -81,14 +96,56 @@ else
     fail=1
 fi
 
-newest="$(command ls -1t data/exports/hours_export_*.csv | head -1)"
-case "$(basename "$newest")" in
-    hours_export_*_covers-to-*.csv)
-        echo "PASS  archived as $(basename "$newest")" ;;
-    *)
-        echo "FAIL  newest export has an unexpected name: $(basename "$newest")"
-        fail=1 ;;
-esac
+# Both export families, and the glob is GUARDED: payments_export_*.csv matches
+# nothing until the first payments ingest, and under `set -euo pipefail` an
+# unmatched glob makes ls fail and would kill this script.
+newest_export() {
+    command ls -1t "data/exports/$1_export_"*.csv 2>/dev/null | head -1 || true
+}
+
+check_export_name() {
+    local family="$1" newest
+    newest="$(newest_export "$family")"
+    if [ -z "$newest" ]; then
+        echo "      no $family export archived yet"
+        return 0
+    fi
+    case "$(basename "$newest")" in
+        "$family"_export_*_covers-to-*.csv)
+            echo "PASS  newest $family export: $(basename "$newest")" ;;
+        *)
+            echo "FAIL  newest $family export is named oddly: $(basename "$newest")"
+            return 1 ;;
+    esac
+}
+
+if ! check_export_name hours; then fail=1; fi
+if ! check_export_name payments; then fail=1; fi
+
+if [ -f engine_v2/data/payments.csv ]; then
+    if PYTHONPATH=engine_v2 python3 - <<'PY'
+import sys
+from afc_hours import payments
+ps = payments.ingest_payments_csv('engine_v2/data/payments.csv')
+print(f"PASS  payments file re-parses ({len(ps)} payments)")
+# Notes exist for the human reading the spreadsheet and must never reach a
+# public page. The engine drops them structurally -- LedgerEntry has no note
+# field at all -- so this is a tripwire on that guarantee, not a substitute.
+blob = open('engine_v2/web_data.json', encoding='utf-8').read()
+leaked = [p.note for p in ps if p.note and p.note in blob]
+if leaked:
+    print(f"FAIL  payment note text reached web_data.json: {leaked}")
+    sys.exit(1)
+print("PASS  no payment note text in web_data.json")
+PY
+    then
+        :
+    else
+        fail=1
+    fi
+else
+    echo "      no payments file yet (nothing settled)"
+fi
 
 if git diff --quiet -- engine_v2/tests; then
     echo "PASS  frozen test fixture untouched"
@@ -113,7 +170,7 @@ if [ "$fail" -ne 0 ]; then
     exit 1
 fi
 
-covers="$(basename "$newest" .csv)"
+covers="$(basename "$(newest_export hours)" .csv)"
 covers="${covers##*covers-to-}"
 echo "ALL CHECKS PASSED. Review the figures above, then publish with:"
 echo
