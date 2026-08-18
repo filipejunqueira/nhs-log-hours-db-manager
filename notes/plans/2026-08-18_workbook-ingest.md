@@ -412,3 +412,33 @@ Two things worth keeping:
   the test fails the list returns 1 and the script exits. It would have made a
   payments-only ingest abort silently. Written as full `if` statements, with the
   reason in a comment so it does not get "tidied" back.
+
+**Step 7 — committed** as `ced0012` the converter, `f495a41` `ingest.sh`,
+`447d17d` the two checking scripts, `560389a` the docs. One scope leak worth
+naming rather than rewriting history over: the archived 1.2.0 plan's rename was
+staged before the first commit and rode along in `ced0012` as a zero-line
+change.
+
+**Step 9 — criterion 9, the real ingest and publish. Done 2026-08-18.**
+
+Ingested the real workbook on the working repo with `nhs-log-ingest`: all checks
+passed, no historical drift. The diff was exactly what step 2 predicted —
+**11 new rows, 12 rows changed only by the Start hour's padding, and 0
+overlapping rows changed in substance**, verified by re-parsing both versions
+rather than by reading the diff.
+
+Published with `nhs-log-deploy` as `ed7924f`, which also carried the four script
+commits.
+
+| | before | after |
+|---|---|---|
+| period | 1 Jun – 31 Jul | 1 Jun – **18 Aug** |
+| days | 47 | **58** |
+| total | 26 343 min | **32 055 min** |
+| above contract | 14 193 min | **16 210 min** |
+| owed | 236.55 h | **270.17 h** |
+| months | 2 | **3** |
+
+`engine_v2/data/payments.csv` now exists and is header-only, which is the true
+state: the payments tab has no rows yet, so the page still reads "nothing
+settled yet".

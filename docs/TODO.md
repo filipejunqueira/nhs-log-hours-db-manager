@@ -4,48 +4,13 @@ Single source of truth for what is done, what is next, and what is parked.
 Update this file as part of every session wrap-up (project-knowledge-updater
 reads and propagates; session snapshots should reference it, not duplicate it).
 
-Last updated: 2026-08-18 (session: schema 1.2.0 went live, then the ingest
-pipeline learned to read the .xlsx workbook itself - both tabs, one download.
-Built and evidenced; the data update it enables is still to publish.)
+Last updated: 2026-08-18 (session: schema 1.2.0 went live, the pipeline learned
+to read the .xlsx workbook itself, and the log was brought up to 18 August.
+Now item 1 is CLOSED; only the cron wrapper is left of the automation.)
 
 ## Now (in order)
 
-1. **Schema 1.2.0 — hours OWED, plus the per-month breakdown.** Designed
-   2026-08-10; full plan, success criteria and a step-by-step for what remains
-   in `PLAN.md` at the repo root.
-   **Three of the four pieces are DONE and sitting unpushed** — `main` is five
-   commits ahead of `origin`, so the live page still serves the 1.1.0 data and
-   shows no owed figure:
-   - **Engine** (2026-08-17, `9b8fdd1` formatting and `dca94c5` the change;
-     lock lifted for the copy and back on). 116 engine + 29 characterisation
-     tests green; no pre-existing figure moved.
-   - **`regen.sh`** (2026-08-17, `f36e2a3`) — reads `data/payments.csv`,
-     reconciles it against the weeks, hands the result to `emit`. Both copies
-     of `web_data.json` regenerated at schema 1.2.0, 236.55 h owed. Also
-     deleted `notes/pending-engine-1.2.0/`, as APPLY.md asked.
-   - **Website 1.4.0** (2026-08-17, `d1e0984`) — `OwedPanel.vue`,
-     `PaymentsTable.vue`, `MonthlyTable.vue`, and `sumMinutes` deleted from
-     format.ts in favour of the engine's `totals.above_contract_minutes`.
-   What is LEFT — PLAN.md steps 8 to 11, in that order:
-   - ~~The rendered-page check (PLAN.md §7, step 7b)~~ — **DONE 2026-08-18,
-     87 checks across six scenarios all pass.** The scenario files are
-     committed under `website/scripts/scenarios/` (reasoning in PLAN.md
-     "Decisions 2026-08-18" item 4). The `partial` scenario reproduces the
-     2026-08-10 sandbox figures exactly, so the shipped engine and the proven
-     one agree. Not yet committed to git.
-   - ~~PUSH (step 8)~~ — **DONE 2026-08-18. Schema 1.2.0 IS LIVE and the
-     public page now says 236.55 h are owed**, confirmed in a headless browser
-     against the deployed URL. Also shipped `992b9dd` website 1.4.1, the one
-     fix the rendered-page check found.
-   - ~~payments-aware ingest scripts~~ — **DONE 2026-08-18, and better than
-     planned.** The spreadsheet exports one tab per CSV but downloads whole, so
-     the pipeline now reads the **`.xlsx` workbook itself** (`ced0012`,
-     `f495a41`, `447d17d`). `scripts/xlsx_to_csv.py` converts both tabs to the
-     CSVs the engine already accepts; everything downstream is unchanged and
-     the engine stays locked. That removes the silent failure outright — there
-     is no second export left to miss. Eight criteria evidenced in a throwaway
-     copy; see `PLAN.md`.
-2. **scripts/update.sh** — the remaining automation. The "copy to
+1. **scripts/update.sh** — the remaining automation. The "copy to
    website/public" link is DONE (2026-07-29: regen.sh does it) and the
    **headless xlsx→csv conversion is DONE too** (2026-08-18:
    `scripts/xlsx_to_csv.py`, driven by `ingest.sh`), so what is left is only
@@ -93,19 +58,49 @@ Built and evidenced; the data update it enables is still to publish.)
   manual (`vite preview` + curl against a hand-crafted bad-schema file).
   Reconcile the wording, or add real tests, later (flagged 2026-07-21).
 
-## Now, pending a decision
-
-- **Publish the data update the new pipeline enables.** The workbook holds 58
-  rows to **2026-08-18**; the live page still shows 47 rows to 31 July. Ingested
-  in a copy it gives **32 055 min over 58 days, 16 210 min above contract,
-  270.17 h owed** (up from 236.55 h), with three months instead of two and no
-  historical drift. The hours CSV diff will also carry **12 cosmetically
-  reformatted rows** — the converter zero-pads the Start hour where the old file
-  was inconsistent; the engine reads both identically. This is a normal
-  `nhs-log-deploy`, and it changes what the public page says.
-
 ## Done log
 
+- 2026-08-18 (later): **the pipeline reads the spreadsheet itself, and the log
+  is up to date to 18 August.** Now item 1 is closed. The spreadsheet exports
+  one tab per CSV but downloads whole, so `ingest.sh` now takes the `.xlsx`:
+  `scripts/xlsx_to_csv.py` (`ced0012`) converts both tabs to the CSVs the engine
+  already accepts, `ingest.sh` (`f495a41`) discovers the workbook by content and
+  runs both derived files through the existing stages with one `regen.sh` at the
+  end, and the two checking scripts (`447d17d`) gained the payments figures, a
+  re-parse and a note-leak tripwire. Plan and evidence archived at
+  `notes/plans/2026-08-18_workbook-ingest.md`.
+  **This deleted the last quiet failure in the project**: a payments export in
+  `~/downloads` used to be silently ignored — `nhs-log-ingest` reported success
+  while the payment never reached the engine. With the workbook as the source
+  there is no second file left to miss.
+  Then `ed7924f` published the data: **58 days to 18 August, 32 055 min,
+  16 210 min above contract, 270.17 h owed**, up from 47 days to 31 July and
+  236.55 h. Three months now. Confirmed on the live page in a browser — owed
+  panel 270.17 h, 11 weeks owing, three monthly rows, no warning banner, no page
+  errors. `engine_v2/data/payments.csv` exists and is header-only, which is the
+  truth: the payments tab has no rows yet.
+  Four things worth keeping:
+  (a) **the converter is proved against the data the engine already ate.** With
+  no payments it must reproduce every value of the canonical CSV, and the engine
+  must compute every day identically — 26 343 min, 47 days, 9 weeks, identical
+  bands and classes. That is what makes a conversion trustworthy rather than
+  plausible.
+  (b) **byte-identical was not achievable, and the fault was in the old file.**
+  The canonical CSV pads the Start hour in 32 of its 47 rows and not in the
+  other 15, almost certainly because it was assembled from exports taken at
+  different times. Measured rather than guessed: the only differing field was
+  Start. The converter pads, so the one-time reformat was 12 rows, 0 of them
+  substantive — and the file is consistent from here on.
+  (c) **`Minutes` and `Hours` are formula cells** (116 of them).
+  `openpyxl(data_only=True)` returns the last calculated value, so a workbook
+  saved by something that does not evaluate formulas would arrive with them
+  blank. That is a hard error naming the spreadsheet row, never a blank passed
+  through.
+  (d) two shell traps found by review rather than by breaking: the
+  newest-export glob would have killed `ingest-check.sh` under `set -euo
+  pipefail` on the first run before any payments export existed, and
+  `[[ cond ]] && cmd` as a standalone statement exits the script when the test
+  fails, which would have made a payments-only ingest abort silently.
 - 2026-08-18: **schema 1.2.0 went LIVE** — the public page now answers the
   question this whole slice existed for: 236.55 h are owed, and since when.
   Three commits. `4fc3036` built the rendered-page check that criterion 7 had
