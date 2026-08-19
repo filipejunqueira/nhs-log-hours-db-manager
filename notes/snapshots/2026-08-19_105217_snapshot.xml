@@ -1,0 +1,251 @@
+<session_snapshot>
+  <origin>
+    <project>nhs-hour-log</project>
+    <session_date>2026-08-19</session_date>
+    <session_summary>A long session spanning 2026-08-18/19 that took the project
+    from "schema 1.2.0 built but unpushed" to "everything built, published,
+    independently reviewed and documented". Schema 1.2.0 went live, the ingest
+    pipeline learned to read the .xlsx workbook directly, the log was brought up
+    to 18 August (270.17 h owed), an audit document for Vince and payroll was
+    written and compiled, and a full-system review re-derived every published
+    figure by an independent implementation — agreeing 92/92. THE BUILD IS DONE;
+    both remaining Now items are non-engineering.</session_summary>
+  </origin>
+
+  <do_not_redo>
+    <item>The full-system review of 2026-08-19 is complete and its report is at
+    notes/reviews/2026-08-19_full-review.md. Every published figure was
+    re-derived from the workbook by an independent minute-by-minute
+    implementation that imports nothing from afc_hours; 92 comparisons, 0
+    disagreements. Do not re-run the whole review — read the report.</item>
+    <item>All five review findings (R1–R5) were APPLIED on 2026-08-19, commit
+    c537044. Do not re-report them: R1 spreadsheet Hours rounds up (no code
+    change, noted); R2 CLAUDE.md staleness; R3 misspelled run command in three
+    places; R4 audit/README described the wrong input file; R5 README and
+    docstring inverted what the defect tests do.</item>
+    <item>The 225 within-baseline minutes are fully explained: Monday 20 July,
+    07:52–23:45, first day of its week so all 953 min are inside the first 1350,
+    and the 225 after 20:00 are therefore contracted AND unsocial. Listed
+    individually in web_data.json at weekly[W30].flagged_segments. Do not
+    re-investigate.</item>
+    <item>The audit/ characterisation suite reads the FROZEN sample
+    engine_v2/tests/fixtures/hours_2026-07-14.csv (32 rows), NOT the live log.
+    That is deliberate and correct — it is why all 29 checks stayed green when
+    the log grew from 47 to 58 days. The README used to claim otherwise and was
+    corrected. Do not "fix" it to point at the live log.</item>
+    <item>The .tex audit document is deliberately NOT committed — neither source
+    nor PDF. It identifies the author fully and the repo is public, so tmp/ and
+    the latex-cls symlink are gitignored. Do not commit them.</item>
+    <item>The website scenario files under website/scripts/scenarios/ pin their
+    OWN 47-day snapshot, not today's data. All 87 checks still pass after the
+    data moved to 58 days, which is the point. Do not regenerate them to match
+    current data.</item>
+    <item>engine_v2/** remains locked (deny rules in .claude/settings.json). No
+    lock-lift was needed or taken this session. regen.sh must NOT be run just to
+    check something — it rewrites generated_at in both committed copies. Build
+    payloads in memory instead.</item>
+    <item>scripts/update.sh was deliberately NOT built. Three of BUILD_NOTES §5's
+    four caveats were already settled, and a timer can neither fetch the workbook
+    (manual download) nor publish (manual push). A read-only staleness reminder
+    was built instead and is installed and scheduled.</item>
+  </do_not_redo>
+
+  <decisions_made>
+    <decision topic="workbook-as-source">
+      <what>ingest.sh takes the whole .xlsx workbook, converted by
+      scripts/xlsx_to_csv.py into the two CSVs the engine already accepts.
+      Everything downstream is unchanged and the engine stays locked.</what>
+      <why>The spreadsheet exports one tab per CSV but downloads whole, so the
+      workbook is the only way to get hours and payments in one action. It also
+      deleted the project's last quiet failure: a payments export in ~/downloads
+      used to be silently ignored while nhs-log-ingest reported success.</why>
+    </decision>
+    <decision topic="start-hour-padding">
+      <what>The converter zero-pads the Start hour (08:45). The canonical CSV was
+      internally inconsistent — 32 of 47 rows padded, 15 not — so no rule
+      reproduces it byte for byte.</what>
+      <why>Proven the engine computes every day identically either way, so it is
+      cosmetic. Padding matches the larger group, making the one-time reformat 12
+      rows instead of 32, and the converter is the only writer from now on.</why>
+    </decision>
+    <decision topic="scenarios-committed">
+      <what>The six rendered-page scenario files are committed under
+      website/scripts/scenarios/ rather than generated at run time.</what>
+      <why>A generated partial-payment scenario would pay the same 5400 min
+      against a growing accrued total, so its expected figures would drift and
+      the failure would read as engine drift. Committed files also keep the check
+      independent of Python and the engine, and age loudly.</why>
+    </decision>
+    <decision topic="reminder-not-automation">
+      <what>A read-only daily staleness reminder (scripts/check-staleness.sh plus
+      a systemd user timer at 11:00, Persistent=true), instead of update.sh.</what>
+      <why>A timer cannot fetch the workbook or publish, so the only step left to
+      automate was already one command. The real failure mode is forgetting — the
+      git history shows an irregular 2–3 week cadence. And a timer that ran the
+      ingest would dirty the working tree on every run.</why>
+    </decision>
+    <decision topic="document-not-committed">
+      <what>The audit document identifies the author fully (name, position, NHS
+      email) and lives in gitignored tmp/, uncommitted, source and PDF.</what>
+      <why>Reverses an earlier "in the repo, identity-light" choice. The repo is
+      public, so the way to have a fully identified internal NHS document is to
+      keep it out of the repo rather than strip the identity out of it.</why>
+    </decision>
+    <decision topic="review-independence">
+      <what>The review's centrepiece was a fresh reimplementation of the counting
+      rules that never imports afc_hours and classifies every worked minute
+      individually — a different algorithm from the engine's segment-splitting.</what>
+      <why>Re-running the engine's own tests proves nothing a shared bug would not
+      also pass. Two implementations agreeing across 58 days is evidence; one
+      agreeing with itself is none.</why>
+    </decision>
+  </decisions_made>
+
+  <current_state>
+    <item>HEAD is 80d87d1 "docs: Now is not empty after all - the notes exposure
+    was in no ledger". Working tree CLEAN, main in sync with origin. Everything
+    this session is pushed.</item>
+    <item>PUBLISHED AND LIVE: schema 1.2.0, period 2026-06-01 to 2026-08-18, 58
+    days, 12 pay-weeks, 3 months, 32 055 min total, bands 15845/8310/7900,
+    classes 28312/1044/0/2699/0, above contract 16 210 min, paid 0, OWED 16 210
+    min = 270.17 h, 11 weeks owing, all seven *_ok integrity keys true, no
+    warnings. Verified on the live page in a browser.</item>
+    <item>Website app version 1.4.1. engine_v2/web_data.json and
+    website/public/web_data.json byte-identical (sha 49aa01c0…), and the live
+    page serves exactly those bytes.</item>
+    <item>docs/TODO.md "Last updated" is 2026-08-19 and its Now list has TWO
+    items, neither of them engineering: (1) send the audit document, which asks
+    payroll to confirm the Monday pay-week; (2) decide what to do about the
+    free-text notes in the public CSV.</item>
+    <item>The audit document is tmp/afc_hours_record_2026-08-18.tex, nine
+    sections, compiled successfully by the user with `awesome-latex`. NOT
+    committed. tmp/ and the latex-cls symlink are gitignored (commit added
+    2026-08-18 after finding both untracked and unignored).</item>
+    <item>Tests: 116 engine + 29 characterisation = 145, all green. The 87-check
+    rendered-DOM suite passes. openpyxl 3.1.5 is installed system-wide, inside
+    the container and out.</item>
+    <item>The staleness timer is installed and scheduled on the user's machine —
+    next elapse confirmed 2026-08-19 11:14 BST. Both units are symlinked into
+    /home/filipejunqueira/.config/systemd/user/.</item>
+    <item>Plans archived this session: notes/plans/2026-08-18_workbook-ingest.md,
+    notes/plans/2026-08-18_audit-document.md,
+    notes/plans/2026-08-19_full-review.md. No PLAN.md exists at the root right
+    now — the Now list is the live ledger.</item>
+    <item>NEW, UNRESOLVED: all 58 rows of the hours log carry a free-text note;
+    21 name colleagues; the notes are committed in engine_v2/data plus five
+    archived exports in a PUBLIC repo. The engine drops them so nothing reaches
+    web_data.json or the page. The 17 Aug note also documents, in writing, a
+    deliberate decision to record 08:01 instead of 04:01.</item>
+  </current_state>
+
+  <next_steps>
+    <step priority="1">See docs/TODO.md — the Now list is the ledger and is
+    current as of 2026-08-19. Both items are the user's decisions, not coding
+    tasks. Item 2 (the public notes) is worth settling BEFORE item 1 (sending the
+    document), because the document points at this repo.</step>
+    <step priority="2">If payroll confirms a pay-week other than Monday: that is
+    a one-line edit to PAY_WEEK_START_WEEKDAY in engine_v2/afc_hours/rules.py
+    (needs a deliberate lock-lift), a schema_version bump per that file's own
+    instruction, a re-run and a republish. It cannot change the total but it
+    moves the additional/overtime split, currently 138.50 h / 131.67 h.</step>
+    <step priority="3">Not in TODO.md, add it there if taken up: propose
+    promoting the container-HOME fact to the user's global CLAUDE.md or
+    rules/bash.md. It is in project memory as
+    bang-prefix-runs-in-the-container.md, and it cost three failed attempts this
+    session. The user was asked and has not yet answered.</step>
+  </next_steps>
+
+  <files_touched>
+    <file action="created" path="/home/filipejunqueira/code/nhs-hour-log/scripts/xlsx_to_csv.py">converts both workbook tabs to the CSVs the engine accepts; computes nothing; --probe identifies an hours workbook by content</file>
+    <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/scripts/ingest.sh">workbook discovery by content, conversion stage, payments probe/drift/archive, one regen at the end</file>
+    <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/scripts/ingest-check.sh">payments figures, re-parse, note-leak tripwire, guarded export globs, len(oks) instead of "six"</file>
+    <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/scripts/deploy.sh">same payments summary and re-parse; fail condition unchanged (integrity only)</file>
+    <file action="created" path="/home/filipejunqueira/code/nhs-hour-log/scripts/build-scenarios.py">builds the six scenario files from engine output; validates itself against the committed web_data.json first</file>
+    <file action="created" path="/home/filipejunqueira/code/nhs-hour-log/scripts/check-staleness.sh">read-only daily reminder; reports live-behind and local-ahead separately; exit 2 on network failure</file>
+    <file action="created" path="/home/filipejunqueira/code/nhs-hour-log/scripts/systemd/nhs-log-staleness.service">SuccessExitStatus=0 1; exit 2 deliberately left as a failure</file>
+    <file action="created" path="/home/filipejunqueira/code/nhs-hour-log/scripts/systemd/nhs-log-staleness.timer">daily 11:00, Persistent=true; carries the both-units-must-be-linked warning</file>
+    <file action="created" path="/home/filipejunqueira/code/nhs-hour-log/website/scripts/check-render.mjs">87 checks over six scenarios; tables anchored on column headings, not .last()</file>
+    <file action="created" path="/home/filipejunqueira/code/nhs-hour-log/website/scripts/scenarios/">six committed scenario JSON files (real, partial, overpaid, no-payments, no-above-contract, no-monthly)</file>
+    <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/website/src/components/OwedPanel.vue">1.4.1 fix: shows a dash, not 0.00 h, when above_contract_minutes is absent</file>
+    <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/engine_v2/data/filipe_working_hours_log.csv">58 rows to 2026-08-18 (11 new days, 12 rows cosmetically reformatted, 0 substantive changes)</file>
+    <file action="created" path="/home/filipejunqueira/code/nhs-hour-log/engine_v2/data/payments.csv">header-only; the true state, no payments recorded</file>
+    <file action="created" path="/home/filipejunqueira/code/nhs-hour-log/notes/reviews/2026-08-19_full-review.md">the review report: method, all phases, five findings, what it could not establish</file>
+    <file action="created" path="/home/filipejunqueira/code/nhs-hour-log/tmp/afc_hours_record_2026-08-18.tex">the audit document — NOT COMMITTED, gitignored, compiled by the user</file>
+    <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/CLAUDE.md">R2: schema 1.2.0, website built and live at 1.4.1, xlsx source named</file>
+    <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/audit/README.md">R4 and R5: what the suite actually pins, and what the defect tests actually do</file>
+    <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/audit/test_characterization.py">R3 and R5: filename references and the inverted defect-test description in the docstring</file>
+    <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/.gitignore">tmp/ and latex-cls — both were untracked and unignored, one `git add -A` from publishing internal NHS documents</file>
+    <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/docs/TODO.md">Last updated 2026-08-19; Now list refilled with the two non-engineering items</file>
+  </files_touched>
+
+  <files_to_read>
+    <file path="/home/filipejunqueira/code/nhs-hour-log/docs/TODO.md">THE LEDGER — start here. Now list current as of 2026-08-19, two items, both decisions</file>
+    <file path="/home/filipejunqueira/code/nhs-hour-log/notes/reviews/2026-08-19_full-review.md">what was checked, how, the five findings, and explicitly what the review could NOT establish</file>
+    <file path="/home/filipejunqueira/code/nhs-hour-log/CLAUDE.md">cardinal rules — engine locked, no money, identity-light; corrected this session</file>
+    <file path="/home/filipejunqueira/code/nhs-hour-log/engine_v2/afc_hours/rules.py">the law. Records that the Monday pay-week is ASSUMED and unconfirmed — the subject of TODO Now item 1</file>
+    <file path="/home/filipejunqueira/code/nhs-hour-log/tmp/afc_hours_record_2026-08-18.tex">the document about to be sent; read before changing any figure it quotes</file>
+    <file path="/home/filipejunqueira/code/nhs-hour-log/docs/BUILD_NOTES.md">§5 rewritten this session (automation answered with a reminder); §6 vue-tsc -b, still load-bearing</file>
+  </files_to_read>
+
+  <domain_state>
+    <pipeline>Download filipe_working_hours_log.xlsx to ~/downloads, run
+    nhs-log-ingest, review the figures, run nhs-log-deploy "message". The
+    workbook carries both tabs; xlsx_to_csv.py converts, the engine still eats
+    CSV. Publishing is manual by decision — the push IS the deploy, no staging
+    site.</pipeline>
+    <engine>Schema 1.2.0, locked. Nine invariants: I1–I7 in core.py (seven *_ok
+    keys), I8 asserted inside payments.reconcile, I9 is the no-arithmetic-in-the-
+    browser rule discharged when sumMinutes was deleted. A violation raises and
+    emits nothing — demonstrated this session via I6.</engine>
+    <website>Vue 3 + TS + Tailwind v4 + Vite, app 1.4.1, deployed by
+    .github/workflows/deploy.yml on push to main. Type-check is `vue-tsc -b` from
+    website/ (--noEmit checks ZERO files here). Playwright is a devDependency;
+    1.62.1 has no install script so npm ci does not fetch browsers.</website>
+    <verification>145 tests (116 engine + 29 characterisation, the latter against
+    the frozen 32-row sample). 87 rendered-DOM checks over six committed
+    scenarios, run against `vite preview --port 4177`. The review's independent
+    re-derivation script is in the session scratchpad, not the repo.</verification>
+    <open_questions>The Monday pay-week is assumed, unconfirmed against LTHT ESR
+    — the one thing that can still move a published figure (the
+    additional/overtime split, never the total). The hours are self-recorded. No
+    second person has reviewed the pipeline added since the 2026-07-06
+    audit.</open_questions>
+  </domain_state>
+
+  <warnings>
+    <warning>THE `!` PREFIX AND THE BASH TOOL RUN IN A CONTAINER whose HOME is
+    /home/filipejunqueira/containers/claude-home, NOT /home/filipejunqueira.
+    Anything writing to the user's real ~ (systemd units, dotfiles,
+    ~/.local/bin) must be given to the user to run in their own terminal. A
+    `systemctl --user link` run with `!` reported "Created symlink" and put it
+    where the real user systemd never looks.</warning>
+    <warning>`systemctl --user enable` on an ABSOLUTE PATH symlinks only the file
+    named — a timer enabled that way fails with "Refusing to start, unit X.service
+    to trigger not loaded" because its service was never linked. Link both. And
+    keep each command on ONE line: a wrapped line gave "Too few arguments" and
+    then tried to execute the unit file.</warning>
+    <warning>`rm -rf` is denied by the user's global settings with no exceptions.
+    Build a fresh directory rather than clearing one; `rm -f` on single files is
+    fine.</warning>
+    <warning>The Bash tool's working directory PERSISTS between calls in this
+    environment (contrary to the older snapshot's claim). A `cd website` in one
+    call leaves the next call there — this caused three failed commands this
+    session. Use absolute paths or cd explicitly every time.</warning>
+    <warning>`cp` is aliased to `cp -i` (use `command cp -f`) and `ls` to lsd
+    (use `command ls` for flags like -la --time-style).</warning>
+    <warning>Running regen.sh or ingest.sh to "check" something rewrites
+    generated_at in BOTH committed copies of web_data.json. Build payloads in
+    memory instead; the review did this throughout.</warning>
+    <warning>tmp/ holds internal NHS documents (the BHLY database write-up and
+    X-drive triage) kept as formatting references, plus the uncommitted audit
+    document. It is gitignored as of 2026-08-18 — do not un-ignore it, and never
+    commit its contents to this PUBLIC repo.</warning>
+    <warning>The global ruff hook reformats any .py on write and removes imports
+    added in an earlier tool call than their first usage. The shellcheck hook
+    blocks a .sh write on any finding — a rejected write is the hook working.</warning>
+    <warning>`[[ cond ]] && cmd` as a standalone statement under `set -e` exits
+    the script when the condition is false. This was a real bug in ingest.sh,
+    caught by review; it is written as full `if` statements now with the reason
+    in a comment.</warning>
+  </warnings>
+</session_snapshot>
