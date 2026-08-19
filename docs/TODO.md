@@ -20,16 +20,16 @@ email is queued.)
    share-check email (Email 0) was sent to the line manager on the evening
    of 2026-08-19. The covering email (Email 1, drafted with the PDF
    attachment and the live-page link) goes per the decision tree in
-   `tmp/email_vince_additional_hours.md`: Friday 2026-08-21 if the share is
+   `tmp/claim/email_vince_additional_hours.md`: Friday 2026-08-21 if the share is
    confirmed and the handover email has had its two days, else Monday or
-   Tuesday morning with the fallback paragraph.
-   `tmp/afc_hours_record_2026-08-18.tex`, compiled 2026-08-18, uncommitted by
-   design. It asks exactly one question: **confirm the Monday pay-week.**
-   `rules.py` records that boundary as assumed and unconfirmed against LTHT's
-   ESR definition, and it decides which minutes cross 37.5 h and become
-   overtime. It cannot change the total (534.25 h either way) but it moves the
-   additional/overtime split — currently 138.50 h / 131.67 h. If the answer
-   differs, that is a one-line edit to `rules.py`, a re-run and a republish.
+   Tuesday morning with the fallback paragraph. The record itself is
+   `tmp/claim/afc_hours_record_2026-08-18.tex` (rev 3, compiled and approved,
+   uncommitted by design).
+   Note on the pay-week: `rules.py` still records the Monday boundary as
+   assumed and unconfirmed against LTHT's ESR definition. It cannot change
+   the total (534.25 h either way) but it moves the additional/overtime
+   split, currently 138.50 h / 131.67 h. If ESR ever turns out to differ,
+   that is a one-line edit to `rules.py`, a re-run and a republish.
 2. ~~Decide what to do about the free-text notes in the public CSV~~ —
    DECIDED 2026-08-19 (user): **leave as-is, no redaction.** The notes column
    stays committed, names included. Context kept for the record: all 58 rows
@@ -102,7 +102,7 @@ email is queued.)
 ## Done log
 
 - 2026-08-19 (late): **the covering email is drafted** —
-  `tmp/email_vince_additional_hours.md`, uncommitted (it names colleagues).
+  `tmp/claim/email_vince_additional_hours.md`, uncommitted (it names colleagues).
   Drafted and reviewed so that no sentence contradicts the audit document
   (the pay-week appears consistently with it), and the week-by-week
   breakdown is offered in the record's own per-pay-week shape with its
@@ -115,7 +115,7 @@ email is queued.)
   user hand-edited rev 2 (ask section removed — the pay-week is verbally
   confirmed as Monday and the email carries any residual question; money
   denial kept only in Limitations; NFC logging disclosed) and supplied
-  handbook extracts at tmp/afc.txt. Fixes applied on review: the "follows the
+  handbook extracts at tmp/claim/afc.txt. Fixes applied on review: the "follows the
   AfC to the letter!" overclaim replaced with the provably-true conservative
   claim (2.11 is an upgrade-only rule, so minute-exact classing counts night
   hours at or below the handbook's answer — direction now stated next to the
@@ -123,7 +123,7 @@ email is queued.)
   fixed and the self-recorded limitation keeps one honest clause. IMPORTANT
   CORRECTION: AfC 2.15 explicitly bars unsocial enhancement on overtime — the
   earlier web check that reported the handbook "silent" was wrong. So the
-  strict-floor scenario is the handbook reading. The private tmp/money/
+  strict-floor scenario is the handbook reading. The private tmp/claim/money/
   tool's notes and report text were corrected; self-checks green. Figure
   re-check and all greps clean on the revised .tex; user compiled and
   approved. Also computed: declining AfC 2.11's whole-shift night upgrade
@@ -140,7 +140,7 @@ email is queued.)
   name only, so renumbering can never break a pointer again; the money
   limitation bullet reworded ("this record contains no monetary figure to
   check … outside this record and the published system") because the old
-  "none exists" became false when tmp/money/ was built; the audit-scope
+  "none exists" became false when tmp/claim/money/ was built; the audit-scope
   bullet updated for the 19 Aug full review while keeping the honest residue
   ("no second person has yet checked"); the pay-week question promoted to its
   own section directly after the Summary; old §4+§5 (pipeline and invariants
@@ -177,7 +177,7 @@ email is queued.)
   (deploy).
 
 - 2026-08-19 (later): **money.py (Part ii) exists — the private pay-owed
-  calculator.** Lives UNCOMMITTED in gitignored `tmp/money/` (user decision:
+  calculator.** Lives UNCOMMITTED in gitignored `tmp/claim/money/` (user decision:
   the repo is public and the audit document states no rate or salary figure
   exists anywhere in the program — keeping money out of the repo keeps that
   true). Reads the locked engine in memory (`core.compute_from_csv` +
@@ -194,10 +194,10 @@ email is queued.)
   ×1.5 flat), higher-of, stacking — coloured terminal report with a per-cell
   table and bar chart. Later the same day the user's payslip confirmed every
   rate input exactly (rate, salary basis, contracted hours and pension tier
-  all reconcile — details in the gitignored `tmp/money/rates.toml`), and
+  all reconcile — details in the gitignored `tmp/claim/money/rates.toml`), and
   confirmed that no extra-hours payment has landed, so the empty payments
   ledger stays correct. **The computed figures live only in the private
-  tmp/money/ report, never in this repo.** User decisions: only hours above
+  tmp/claim/money/ report, never in this repo.** User decisions: only hours above
   the 22.5 h are priced (the 225 within-baseline unsocial minutes are
   ignored), and the payslip rate wins over the salary derivation (the
   script errors if the two ever disagree). The payments reduction
@@ -238,7 +238,7 @@ email is queued.)
   safety net actually guards.
 
 - 2026-08-18 (evening): **the audit document exists and compiles** —
-  `tmp/afc_hours_record_2026-08-18.tex`, nine sections, written for Vince and
+  `tmp/claim/afc_hours_record_2026-08-18.tex`, nine sections, written for Vince and
   payroll, fully identified, and deliberately NOT committed (the repo is public;
   `tmp/` is gitignored). Every figure was checked by script against
   `web_data.json` and every rule against `rules.py`; no currency symbol, no

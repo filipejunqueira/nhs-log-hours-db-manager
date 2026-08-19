@@ -3,7 +3,7 @@
     <project>nhs-hour-log</project>
     <session_date>2026-08-19 (afternoon and evening)</session_date>
     <session_summary>The action session: the private pay calculator (Part ii)
-    was built in gitignored tmp/money/ and confirmed against the user's
+    was built in gitignored tmp/claim/money/ and confirmed against the user's
     payslip; website 1.4.2 removed the money wording from the within-baseline
     flag; the audit document reached rev 3 (restructured, prose-edited,
     user-edited, corrected against the user's own AfC handbook extracts) and
@@ -16,19 +16,19 @@
   </origin>
 
   <do_not_redo>
-    <item>The audit document (tmp/afc_hours_record_2026-08-18.tex, rev 3) is
+    <item>The audit document (tmp/claim/afc_hours_record_2026-08-18.tex, rev 3) is
     COMPILED AND APPROVED by the user. Do not re-edit it without a new
     reason; any future edit must re-run the figure re-check and greps the
     ledger describes.</item>
     <item>Email 0 (the share-check email) was SENT to the line manager on
     the evening of 2026-08-19. Do not draft another; the reply (or silence)
     picks the branch in the decision tree at the top of
-    tmp/email_vince_additional_hours.md.</item>
+    tmp/claim/email_vince_additional_hours.md.</item>
     <item>Email 1 (the covering email) is FINAL-DRAFT in the same tmp file,
     with a fallback paragraph for the no-reply branch and the pre-send
     checklist at the bottom. Refine only if the user asks.</item>
-    <item>The private money tool in tmp/money/ is complete and corrected:
-    the AfC handbook extract the user saved at tmp/afc.txt shows 2.15 bars
+    <item>The private money tool in tmp/claim/money/ is complete and corrected:
+    the AfC handbook extract the user saved at tmp/claim/afc.txt shows 2.15 bars
     unsocial enhancement on overtime, so the strict-floor scenario is the
     handbook reading (the earlier "handbook silent" web-check conclusion was
     WRONG and is already corrected in rates.toml and money.py). Rate inputs
@@ -121,7 +121,7 @@
     IN PROGRESS (Email 0 sent, Email 1 queued); Now item 2 was decided in
     the morning session (notes stay). New Later item: per-week CSV exporter
     if payroll accepts the weekly format.</item>
-    <item>Verified AfC facts on file (tmp/afc.txt): 2.10 minute-exact
+    <item>Verified AfC facts on file (tmp/claim/afc.txt): 2.10 minute-exact
     unsocial windows; 2.11 is an upgrade-only whole-shift rule (declining
     it can only under-count); 2.15 bars enhancement on overtime; 2.17
     part-timers get enhancements below 37.5 h; 3.1 overtime is per-week
@@ -137,7 +137,7 @@
   <next_steps>
     <step priority="1">See docs/TODO.md Now item 1 (IN PROGRESS) — the
     email decision tree is at the top of
-    tmp/email_vince_additional_hours.md. Branches: reply confirming the
+    tmp/claim/email_vince_additional_hours.md. Branches: reply confirming the
     share → send Email 1 once the handover-email gap is satisfied; reply
     saying never-seen → adjust one background sentence first; no reply by
     Friday midday → Monday/Tuesday morning with the fallback paragraph.</step>
@@ -155,19 +155,19 @@
     <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/website/package.json">1.4.2 (committed)</file>
     <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/docs/TODO.md">session entries, then scrubbed of money/strategy wording (committed, history rewritten)</file>
     <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/CLAUDE.md">website version 1.4.2 (committed)</file>
-    <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/tmp/afc_hours_record_2026-08-18.tex">rev 3: user edits + fixes; compiled and approved (uncommitted)</file>
-    <file action="created" path="/home/filipejunqueira/code/nhs-hour-log/tmp/email_vince_additional_hours.md">Email 0 (sent) + Email 1 (final draft) + fallback + checklist (uncommitted)</file>
-    <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/tmp/money/rates.toml">payslip-confirmed inputs; 2.15 correction in verification notes (uncommitted)</file>
-    <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/tmp/money/money.py">four scenarios, coloured report, 2.15 wording correction (uncommitted)</file>
-    <file action="created" path="/home/filipejunqueira/code/nhs-hour-log/tmp/afc.txt">user-supplied AfC handbook extracts (uncommitted)</file>
+    <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/tmp/claim/afc_hours_record_2026-08-18.tex">rev 3: user edits + fixes; compiled and approved (uncommitted)</file>
+    <file action="created" path="/home/filipejunqueira/code/nhs-hour-log/tmp/claim/email_vince_additional_hours.md">Email 0 (sent) + Email 1 (final draft) + fallback + checklist (uncommitted)</file>
+    <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/tmp/claim/money/rates.toml">payslip-confirmed inputs; 2.15 correction in verification notes (uncommitted)</file>
+    <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/tmp/claim/money/money.py">four scenarios, coloured report, 2.15 wording correction (uncommitted)</file>
+    <file action="created" path="/home/filipejunqueira/code/nhs-hour-log/tmp/claim/afc.txt">user-supplied AfC handbook extracts (uncommitted)</file>
   </files_touched>
 
   <files_to_read>
     <file path="/home/filipejunqueira/code/nhs-hour-log/docs/TODO.md">THE LEDGER — Now item 1 carries the live state</file>
-    <file path="/home/filipejunqueira/code/nhs-hour-log/tmp/email_vince_additional_hours.md">both emails, the decision tree, the fallback, the checklist</file>
-    <file path="/home/filipejunqueira/code/nhs-hour-log/tmp/afc.txt">the verified AfC rules — read before any rules argument</file>
-    <file path="/home/filipejunqueira/code/nhs-hour-log/tmp/money/rates.toml">payslip-confirmed inputs and the corrected verification notes</file>
-    <file path="/home/filipejunqueira/code/nhs-hour-log/tmp/afc_hours_record_2026-08-18.tex">the document as compiled and approved</file>
+    <file path="/home/filipejunqueira/code/nhs-hour-log/tmp/claim/email_vince_additional_hours.md">both emails, the decision tree, the fallback, the checklist</file>
+    <file path="/home/filipejunqueira/code/nhs-hour-log/tmp/claim/afc.txt">the verified AfC rules — read before any rules argument</file>
+    <file path="/home/filipejunqueira/code/nhs-hour-log/tmp/claim/money/rates.toml">payslip-confirmed inputs and the corrected verification notes</file>
+    <file path="/home/filipejunqueira/code/nhs-hour-log/tmp/claim/afc_hours_record_2026-08-18.tex">the document as compiled and approved</file>
     <file path="/home/filipejunqueira/containers/claude-home/.claude/plans/exelent-what-would-be-unified-hoare.md">the email plan: argument inventory and reply playbook (harness-side, private)</file>
   </files_to_read>
 
