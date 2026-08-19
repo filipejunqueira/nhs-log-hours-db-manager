@@ -4,16 +4,25 @@ Single source of truth for what is done, what is next, and what is parked.
 Update this file as part of every session wrap-up (project-knowledge-updater
 reads and propagates; session snapshots should reference it, not duplicate it).
 
-Last updated: 2026-08-19 (session: the audit document was written and compiled,
-then a full-system review re-derived every published figure independently and
-agreed 92/92. Five documentation findings, all applied. The build is done; what
-is left in Now is not engineering.)
+Last updated: 2026-08-19, late evening (session: money.py priced the owed
+hours privately at the payslip-confirmed rate; website 1.4.2 removed the
+money wording from the within-baseline flag; the audit document reached rev 3
+— restructured, prose-edited, user-edited, corrected against the user's AfC
+handbook extracts; the covering email was planned, drafted and reviewed;
+the share-check email went to the line manager this evening and the covering
+email is queued.)
 
 ## Now (in order)
 
 *Neither item is engineering — the system is built, live and verified.*
 
-1. **Send the audit document to Vince and payroll.**
+1. **Send the audit document to Vince and payroll.** IN PROGRESS: the
+   share-check email (Email 0) was sent to the line manager on the evening
+   of 2026-08-19. The covering email (Email 1, drafted with the PDF
+   attachment and the live-page link) goes per the decision tree in
+   `tmp/email_vince_additional_hours.md`: Friday 2026-08-21 if the share is
+   confirmed and the handover email has had its two days, else Monday or
+   Tuesday morning with the fallback paragraph.
    `tmp/afc_hours_record_2026-08-18.tex`, compiled 2026-08-18, uncommitted by
    design. It asks exactly one question: **confirm the Monday pay-week.**
    `rules.py` records that boundary as assumed and unconfirmed against LTHT's
@@ -21,22 +30,23 @@ is left in Now is not engineering.)
    overtime. It cannot change the total (534.25 h either way) but it moves the
    additional/overtime split — currently 138.50 h / 131.67 h. If the answer
    differs, that is a one-line edit to `rules.py`, a re-run and a republish.
-2. **Decide what to do about the free-text notes in the public CSV.**
-   Found by the 2026-08-19 review and recorded nowhere before now. All 58 rows
-   carry a note; **21 name colleagues** (Vince, Mark, John, Lizzi, Lizzie, Dani,
-   Andrea, Raj), and the notes are committed in
+2. ~~Decide what to do about the free-text notes in the public CSV~~ —
+   DECIDED 2026-08-19 (user): **leave as-is, no redaction.** The notes column
+   stays committed, names included. Context kept for the record: all 58 rows
+   carry a note, 21 name colleagues, committed in
    `engine_v2/data/filipe_working_hours_log.csv` plus five archived exports in
-   `data/exports/` — a world-readable repo. The engine correctly drops them, so
-   nothing reaches `web_data.json` or the page; the exposure is the repo behind
-   it. Separately, the 17 Aug note reads *"I actually started at 4:01am … so I'm
-   putting 8:01 so it does not count as unsocial hour"* — a conservative,
-   creditable choice to under-claim four hours, but a sentence that reads badly
-   next to a document arguing the figures can be trusted. Options: stop
-   committing the notes column (the converter can drop it; the engine never used
-   it), scrub the names, or leave it and be ready to explain. **Worth settling
-   before the document is sent**, since the document points at this repo.
+   `data/exports/` in a world-readable repo. The engine drops them, so nothing
+   reaches `web_data.json` or the page. The 17 Aug note documents a deliberate
+   under-claim (recorded 08:01 instead of the actual 04:01 start so it does not
+   count as unsocial) — be ready to explain both if asked.
 
 ## Later / parked
+
+- **Per-week CSV exporter, if payroll accepts the weekly format.** A small
+  read-only script producing each pay-week's split (plain additional hours /
+  hours beyond 37.5 / night and weekend hours within each) from
+  `web_data.json` — no engine change, no money. Build only once the covering
+  email's format question is answered.
 
 - **`data/payments_template.csv` is now redundant, and could mislead.** It was
   written 2026-08-10 as the spec for the payments input, back when the plan was
@@ -90,6 +100,109 @@ is left in Now is not engineering.)
   Reconcile the wording, or add real tests, later (flagged 2026-07-21).
 
 ## Done log
+
+- 2026-08-19 (late): **the covering email is drafted** —
+  `tmp/email_vince_additional_hours.md`, uncommitted (it names colleagues).
+  Drafted and reviewed so that no sentence contradicts the audit document
+  (the pay-week appears consistently with it), and the week-by-week
+  breakdown is offered in the record's own per-pay-week shape with its
+  band and unsocial split intact. The pensionability point was verified
+  against NHSBSA (April 2025 regulation change, additional hours up to WTE
+  pensionable). The pre-send checklist is at the bottom of the draft.
+  User's action: checklist, then send.
+
+- 2026-08-19 (night): **audit document rev 3 + the AfC 2.15 correction.** The
+  user hand-edited rev 2 (ask section removed — the pay-week is verbally
+  confirmed as Monday and the email carries any residual question; money
+  denial kept only in Limitations; NFC logging disclosed) and supplied
+  handbook extracts at tmp/afc.txt. Fixes applied on review: the "follows the
+  AfC to the letter!" overclaim replaced with the provably-true conservative
+  claim (2.11 is an upgrade-only rule, so minute-exact classing counts night
+  hours at or below the handbook's answer — direction now stated next to the
+  disclosure); the dangling "confirmed, above" table cell reworded; NFC typos
+  fixed and the self-recorded limitation keeps one honest clause. IMPORTANT
+  CORRECTION: AfC 2.15 explicitly bars unsocial enhancement on overtime — the
+  earlier web check that reported the handbook "silent" was wrong. So the
+  strict-floor scenario is the handbook reading. The private tmp/money/
+  tool's notes and report text were corrected; self-checks green. Figure
+  re-check and all greps clean on the revised .tex; user compiled and
+  approved. Also computed: declining AfC 2.11's whole-shift night upgrade
+  currently costs nothing — none of the 58 shifts is majority-night, so the
+  conservative claim is free on today's data (estimator in the session
+  scratchpad).
+
+- 2026-08-19 (evening): **audit document rev 2** (`tmp/`, still uncommitted by
+  design). The premise "it uses old values" was checked and found wrong —
+  every figure matches the published data (the 19 Aug review re-derived them
+  all). The real defects were editorial, all fixed: four broken section
+  pointers (including both pointers to the pay-week ask) eliminated by
+  stripping the hand-typed numbers from every section title and referring by
+  name only, so renumbering can never break a pointer again; the money
+  limitation bullet reworded ("this record contains no monetary figure to
+  check … outside this record and the published system") because the old
+  "none exists" became false when tmp/money/ was built; the audit-scope
+  bullet updated for the 19 Aug full review while keeping the honest residue
+  ("no second person has yet checked"); the pay-week question promoted to its
+  own section directly after the Summary; old §4+§5 (pipeline and invariants
+  tables) collapsed into four plain paragraphs with the detail deferred to a
+  future technical document; the para-2.11 exact-boundary reading disclosed
+  as a deliberate choice (the pay-week stays the single ask); the live Pages
+  URL added via \href (the class already loads hyperref — no new package).
+  Deliberately omitted: the repo URL and the colleague-notes limitation
+  bullet — the document gives readers no path to the repo. Verified: a
+  scratchpad script re-derived every number in the .tex from web_data.json
+  (ALL FIGURES MATCH); greps confirm no currency shape, money words only in
+  denials, no colleague names, zero numeric section pointers, no repo URL.
+  UNVERIFIED until the user compiles with `awesome-latex` and eyeballs the
+  layout. A user-requested prose-editing pass then ran over the same file:
+  em dashes cut from ~15 to 3, repeated constructions varied, the two
+  aphoristic paragraph closers replaced with plain statements (denial
+  meanings kept), and the duplicated "92 comparisons" passage deduplicated
+  into the trust section. Figure re-check and all greps re-run clean after
+  the pass.
+
+- 2026-08-19 (evening): **website 1.4.2 — the within-baseline flag no longer
+  mentions money.** The amber box in `WeeklyTable.vue` said "flagged for the
+  money layer to decide", violating the page's own "no money, ever" rule. All
+  of that text was hardcoded in the component — nothing came from the locked
+  engine, the JSON contains zero occurrences of "money", and none of the 87
+  render checks pin the wording — so no lock-lift was needed. Reworded in
+  plain language (the minutes are part of normal contracted time, not extra
+  hours, listed so nothing is hidden), with the contracted-hours figure drawn
+  from `meta.contract` rather than hardcoded; chip tooltip extended the same
+  way; chip word "flag", IntegrityPanel and OwedPanel deliberately untouched;
+  `docs/CONTINUATION_PROMPT.md` line 54 keeps "money layer" as a historical
+  record. Verified: `grep -ri money website/src/` returns nothing, `vue-tsc
+  -b` clean, build passes, all 87 render checks green. Pushed to main
+  (deploy).
+
+- 2026-08-19 (later): **money.py (Part ii) exists — the private pay-owed
+  calculator.** Lives UNCOMMITTED in gitignored `tmp/money/` (user decision:
+  the repo is public and the audit document states no rate or salary figure
+  exists anywhere in the program — keeping money out of the repo keeps that
+  true). Reads the locked engine in memory (`core.compute_from_csv` +
+  `payments.reconcile`, never `emit`), aggregates `result.segments` into
+  band × class × pay-week, self-checks every rebuilt figure against the
+  published `web_data.json` (totals, bands, classes, all 15 cross-tab cells
+  three-way, above-contract, within-baseline, all 12 weeks — all green), and
+  prices at rates verified 2026-08-19 against the NHS T&C handbook (Section 2
+  bands 4–9: Sat/night +30%, Sun/BH +60%; Section 3: overtime ×1.5, BH ×2.0,
+  part-time additional hours at plain time until 37.5 h). The handbook is
+  silent on combining unsocial enhancement with overtime, so the three
+  variants from the original Part-ii sketch became four scenarios, floor to
+  ceiling: plain-time (no enhancement at all, ×1.0), strict-floor (overtime
+  ×1.5 flat), higher-of, stacking — coloured terminal report with a per-cell
+  table and bar chart. Later the same day the user's payslip confirmed every
+  rate input exactly (rate, salary basis, contracted hours and pension tier
+  all reconcile — details in the gitignored `tmp/money/rates.toml`), and
+  confirmed that no extra-hours payment has landed, so the empty payments
+  ledger stays correct. **The computed figures live only in the private
+  tmp/money/ report, never in this repo.** User decisions: only hours above
+  the 22.5 h are priced (the 225 within-baseline unsocial minutes are
+  ignored), and the payslip rate wins over the salary derivation (the
+  script errors if the two ever disagree). The payments reduction
+  (proportional per week) is dormant until real payments arrive. Refuses to
+  run if tmp/ stops being gitignored; never writes bytecode into engine_v2/.
 
 - 2026-08-19: **full-system review — no finding changes any published figure.**
   Requested after the audit document compiled; report with all evidence at
