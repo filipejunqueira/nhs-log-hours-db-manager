@@ -4,13 +4,37 @@ Single source of truth for what is done, what is next, and what is parked.
 Update this file as part of every session wrap-up (project-knowledge-updater
 reads and propagates; session snapshots should reference it, not duplicate it).
 
-Last updated: 2026-08-18 (session: schema 1.2.0 went live, the pipeline learned
-to read the .xlsx workbook itself, the log was brought up to 18 August, and the
-staleness timer is installed and scheduled. THE NOW LIST IS EMPTY.)
+Last updated: 2026-08-19 (session: the audit document was written and compiled,
+then a full-system review re-derived every published figure independently and
+agreed 92/92. Five documentation findings, all applied. The build is done; what
+is left in Now is not engineering.)
 
 ## Now (in order)
 
-*(empty — everything planned is done and live. See Later / parked below.)*
+*Neither item is engineering — the system is built, live and verified.*
+
+1. **Send the audit document to Vince and payroll.**
+   `tmp/afc_hours_record_2026-08-18.tex`, compiled 2026-08-18, uncommitted by
+   design. It asks exactly one question: **confirm the Monday pay-week.**
+   `rules.py` records that boundary as assumed and unconfirmed against LTHT's
+   ESR definition, and it decides which minutes cross 37.5 h and become
+   overtime. It cannot change the total (534.25 h either way) but it moves the
+   additional/overtime split — currently 138.50 h / 131.67 h. If the answer
+   differs, that is a one-line edit to `rules.py`, a re-run and a republish.
+2. **Decide what to do about the free-text notes in the public CSV.**
+   Found by the 2026-08-19 review and recorded nowhere before now. All 58 rows
+   carry a note; **21 name colleagues** (Vince, Mark, John, Lizzi, Lizzie, Dani,
+   Andrea, Raj), and the notes are committed in
+   `engine_v2/data/filipe_working_hours_log.csv` plus five archived exports in
+   `data/exports/` — a world-readable repo. The engine correctly drops them, so
+   nothing reaches `web_data.json` or the page; the exposure is the repo behind
+   it. Separately, the 17 Aug note reads *"I actually started at 4:01am … so I'm
+   putting 8:01 so it does not count as unsocial hour"* — a conservative,
+   creditable choice to under-claim four hours, but a sentence that reads badly
+   next to a document arguing the figures can be trusted. Options: stop
+   committing the notes column (the converter can drop it; the engine never used
+   it), scrub the names, or leave it and be ready to explain. **Worth settling
+   before the document is sent**, since the document points at this repo.
 
 ## Later / parked
 
@@ -40,6 +64,15 @@ staleness timer is installed and scheduled. THE NOW LIST IS EMPTY.)
 - **Extra typo tripwires** (engine adjacent, needs a deliberate lock-lift):
   cross-check the ignored `Hours` column (×60 vs recomputed minutes);
   plausibility warnings (>14 h days, implausible weeks).
+  **Write the Hours cross-check round-up-aware** — the 2026-08-19 review found
+  the spreadsheet rounds that column *up* rather than to nearest, so 22 of 58
+  rows sit 0.01 h above `Minutes`/60 and a naive check would flag all of them.
+  Nothing reads the column today. The same formula habit on the payments tab
+  would be worse: `HoursPaid` disagreeing with `MinutesPaid` is a *fatal* error
+  at a 0.5-minute tolerance, and rounding up leaves only a 0.1-minute margin —
+  prefer `=ROUND(minutes/60,2)` there.
+  Plausibility note from the same review: seven days exceed 12 h, four of them
+  15.8–16.4 h on 20–23 July, all consistent with their notes.
 - **money.py (Part ii)** and the private financial view — after the dashboard.
 - ~~Schema 1.2.0 `above_contract_minutes`~~ — PROMOTED to Now item 1
   (2026-08-10): it is folded into the same lock-lift as the payments work,
