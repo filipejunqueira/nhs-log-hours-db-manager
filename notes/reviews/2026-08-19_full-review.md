@@ -7,8 +7,13 @@ independent implementation rather than re-asserted by the engine's own tests.
 
 **Verdict: no finding changes any published figure.** Every number on the live
 page, in `web_data.json` and in the audit document was reproduced independently
-from the workbook, to the minute. Three minor findings, all documentation-side,
-listed at the end with proposed fixes (not applied).
+from the workbook, to the minute.
+
+Five findings, all documentation-side, all now **applied** (2026-08-19). Two of
+them — R4 and R5 — were uncovered while fixing the first three, and are the more
+interesting ones: `audit/` described the wrong input file and inverted the
+purpose of its own defect tests. Neither affects a figure, but both would have
+misled anyone relying on that suite to know what is guarded.
 
 **State reviewed:** commit `a833fc2`, working tree carrying only the review
 plan; the workbook at `~/downloads/filipe_working_hours_log.xlsx` (mtime 18 Aug
@@ -154,7 +159,29 @@ start of every session, so it actively misleads future work.
 **Finding R3 (minor, already parked):** `audit/README.md:32` prints a run
 command naming `test_characterisation.py`; the file is
 `test_characterization.py`, so the command as printed fails. Already in TODO's
-Later list; confirmed still present.
+Later list; confirmed still present. *(Widened while fixing: the same wrong
+filename appears twice more in the suite's own docstring, including a second
+unrunnable run command.)*
+
+**Finding R4 (moderate — found while applying the fixes):**
+`audit/README.md` described the suite as pinning "the **current** real log
+(`filipe_working_hours_log.csv`, 22 days)". It does not, and never has: it
+reads the **frozen fixture** `engine_v2/tests/fixtures/hours_2026-07-14.csv`
+(32 rows, 1 Jun – 14 Jul). That is the correct design — pinning the live log
+would break these checks every time a day is added — and it is why all 29
+stayed green when the log grew from 47 to 58 days. But a reader of the README
+would have believed the suite guards today's published figures. It guards the
+engine's behaviour against a fixed input, which is a different and more useful
+thing. The same paragraph also carried finding F1 as still open; F1 was fixed
+2026-07-19.
+
+**Finding R5 (moderate — found while applying the fixes):** the README, and
+the suite's own docstring, both said the `test_defect_*` checks pin **current
+defective** behaviour and would "fail once a fix lands". The reverse is true:
+all four defects (D1, D2, D2b, D3) were fixed on 2026-07-19 and the tests were
+rewritten then to pin the *corrected* behaviour — their names end `_after_f2`,
+`_after_f4`, `_after_f3`, and no test is named `test_defect_*` at all any more.
+As written, the documentation inverted the direction of the safety net.
 
 `docs/BUILD_NOTES.md` claims all still hold (the ≥ 1.1.0 schema gate correctly
 admits 1.2.0). Archived plans were left as photographs.
@@ -176,4 +203,11 @@ admits 1.2.0). Archived plans were left as photographs.
 |---|---|---|---|
 | R1 | minor | spreadsheet `Hours` column rounds up; 22/58 rows +0.01 h; read by nothing | none needed in code; note kept here. If the payments tab ever computes `HoursPaid`, prefer `=ROUND(minutes/60,2)` |
 | R2 | minor | project `CLAUDE.md` stale: "schema 1.1.0", website "not built yet" | three-line edit bringing it to 1.2.0 / built-and-live |
-| R3 | minor | `audit/README.md:32` run command names a file that does not exist | one-word spelling fix, folded with the same item already parked in TODO |
+| R3 | minor | run command names a file that does not exist — in `audit/README.md` **and twice in the suite docstring** | spelling fixed in all three places; the English word "characterisation" left British |
+| R4 | moderate | `audit/README.md` said the suite pins the current 22-day real log; it reads the frozen 32-day fixture, and carried the fixed F1 as open | rewritten to state the fixture, why frozen is deliberate, and that F1 is closed |
+| R5 | moderate | README and suite docstring both inverted what the defect tests do — they pin the *fixed* behaviour, not the defects | both corrected |
+
+**All five applied 2026-08-19** on the user's instruction. R1 needed no code
+change (a note for the spreadsheet, kept above). R2–R5 were documentation
+edits; both suites re-run after each (116 + 29 green), and the corrected run
+command was executed to prove it works.

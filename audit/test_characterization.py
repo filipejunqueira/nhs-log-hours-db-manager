@@ -1,5 +1,5 @@
 """
-test_characterisation.py -- audit characterisation suite for engine_v2 (2026-07-06)
+test_characterization.py -- audit characterisation suite for engine_v2 (2026-07-06)
 ====================================================================================
 
 Companion to /docs/logic-audit_2026-07-06.md. Pins the engine's behaviour on the
@@ -10,11 +10,12 @@ engine's own 67 checks.
 Lives OUTSIDE engine_v2/ because that package is locked (deny-listed in
 .claude/settings.json); this suite imports it read-only.
 
-Tests named test_defect_* pin CURRENT behaviour that the audit report flags as
-a defect -- they pass today and exist so any future fix shows up as a
-deliberate, visible change here.
+The D1/D2/D2b/D3 checks below pin the behaviour AFTER the 2026-07-19 fixes
+(hence the _after_f2 / _after_f4 / _after_f3 suffixes). They were originally
+written to pin the defects themselves; they were rewritten when the fixes
+landed, and now fail if a fix is ever undone.
 
-Run standalone:  python3 audit/test_characterisation.py
+Run standalone:  python3 audit/test_characterization.py
 Or with pytest:  pytest audit/
 """
 

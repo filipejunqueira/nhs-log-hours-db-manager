@@ -10,26 +10,41 @@ the package read-only and never writes inside it.
 
 What it pins:
 
-- The **current** real log (`engine_v2/data/filipe_working_hours_log.csv`,
-  22 days, 1–26 Jun 2026): grand totals, hand-derived weekly totals and bands,
-  unsocial-class totals, integrity flags, cumulative series, row-order
-  invariance, and emit determinism. (The engine's own tests in
-  `engine_v2/tests/` still pin the superseded 21-day snapshot and its renamed
-  CSV — see report finding F1.)
+- The **frozen fixture** `engine_v2/tests/fixtures/hours_2026-07-14.csv`
+  (32 rows, 1 Jun – 14 Jul 2026): grand totals, hand-derived weekly totals and
+  bands, unsocial-class totals, integrity flags, cumulative series, row-order
+  invariance, and emit determinism.
+
+  **Frozen, not live, and deliberately so.** Pinning the working log would make
+  these checks fail every time a day is added, which is noise rather than
+  signal — the suite exists to catch a change in the *engine*, not a change in
+  the data. Demonstrated 2026-08-18: the log grew from 47 to 58 days and all 29
+  checks stayed green. `AFC_REAL_LOG` overrides the path if you deliberately
+  want to run them against something else.
+
+  (This paragraph previously described the suite as pinning the current real
+  log at 22 days, and carried finding F1 as open. Both were wrong: F1 was
+  fixed 2026-07-19, and the suite has always read the fixture. Corrected
+  2026-08-19 by the full review.)
 - AUDIT_BRIEF §3 scenarios the engine's 67 checks don't cover: threshold
   straddles inside one period, one-minute clock-boundary segments, the maximal
   00:00–23:59 day, 2027 substitute bank holidays, weekend/bank-holiday
   adjacency, pay-week edges, gap weeks, the mixed within-baseline week, BOM
   files, and more.
-- Tests named `test_defect_*` pin current **defective** behaviour documented in
-  the report (D1–D3). They pass today; if a fix lands in the engine they fail,
-  making the behaviour change deliberate and visible. Update both the test and
-  the report when that happens.
+- The four checks for defects D1, D2, D2b and D3 from the report. **All four
+  defects were FIXED on 2026-07-19**, and these tests were rewritten at that
+  point to pin the *corrected* behaviour — which is why their names end
+  `_after_f2`, `_after_f4` and `_after_f3`. They now fail if a fix is ever
+  undone, rather than if one is applied.
+
+  (This entry previously said they pin *defective* behaviour that "passes
+  today" and would fail once a fix landed. That was true when written and has
+  been inverted since the July fixes. Corrected 2026-08-19 by the full review.)
 
 Run:
 
 ```
-python3 audit/test_characterisation.py   # standalone, stdlib only
+python3 audit/test_characterization.py   # standalone, stdlib only
 pytest audit/                            # or under pytest
 ```
 

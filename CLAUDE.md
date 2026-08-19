@@ -1,9 +1,11 @@
 # nhs-hour-log
 
 Public dashboard rendering the locked AfC hours engine's output
-(engine_v2/web_data.json, schema 1.1.0) as a legible working-hours page.
+(engine_v2/web_data.json, schema 1.2.0) as a legible working-hours page.
 Engine = Python (built, locked). Website = Vue 3 + TS + Tailwind v4 + Vite
-(not built yet), deployed to GitHub Pages.
+(built and live at app version 1.4.1), deployed to GitHub Pages on push to
+main. Source: the working-hours .xlsx workbook, converted by
+scripts/xlsx_to_csv.py; both tabs (hours and payments) travel together.
 
 ## Read first
 - docs/WEBSITE_PLAN.md — authoritative plan: data contract, types, repo

@@ -44,8 +44,6 @@ staleness timer is installed and scheduled. THE NOW LIST IS EMPTY.)
 - ~~Schema 1.2.0 `above_contract_minutes`~~ — PROMOTED to Now item 1
   (2026-08-10): it is folded into the same lock-lift as the payments work,
   which is what finally deletes `sumMinutes` from format.ts.
-- Stale `-isation` filename references in `audit/README.md:32` and the
-  characterisation suite's own docstring (cosmetic; run command shown is wrong).
 - ~~Start using `notes/snapshots/`~~ — DONE; two snapshots exist and
   snapshot-restore found the newest without guesswork (confirmed 2026-08-10).
   Note the failure mode it exposed: a snapshot 20 days stale described website
@@ -73,12 +71,25 @@ staleness timer is installed and scheduled. THE NOW LIST IS EMPTY.)
   pipeline joint: workbook → CSVs → in-memory rebuild → committed JSON → live
   page. 145 tests green, determinism shown, refusal-on-violation demonstrated,
   I9 grep clean, 87 scenario checks pass, live DOM matches live JSON. Three
-  minor findings, all documentation-side, fixes proposed not applied: the
-  spreadsheet's Hours column rounds up (22/58 rows, read by nothing; would
-  narrow the payments 0.5-min tolerance to a 0.1-min margin if the habit
-  spreads there); the project CLAUDE.md still says schema 1.1.0 and website
-  "not built yet"; the audit/README run command misspells the suite filename
-  (already parked).
+  minor findings, all documentation-side. **All applied the same day, and
+  applying them surfaced two more.** R1: the spreadsheet's Hours column rounds
+  up (22/58 rows, read by nothing — but it would leave only a 0.1-min margin
+  against the payments tab's fatal 0.5-min tolerance if the same formula habit
+  spreads there; no code change, noted in the report). R2: the project
+  CLAUDE.md said schema 1.1.0 and website "not built yet" — now 1.2.0, live at
+  1.4.1, with the xlsx source documented. R3: the run command misspelled the
+  suite filename, in `audit/README.md` and twice more in the suite's own
+  docstring. **R4:** `audit/README.md` claimed the characterisation suite pins
+  the current real log at 22 days; it reads the frozen 32-day fixture, and
+  always has — which is the right design, and is why all 29 stayed green when
+  the log grew to 58 days, but the README told the opposite story and also
+  carried the long-fixed F1 as open. **R5:** both the README and the suite
+  docstring said the defect tests pin *defective* behaviour and would fail once
+  a fix landed; the reverse is true since 2026-07-19 — they pin the corrected
+  behaviour and fail if a fix is undone, which is why they are named
+  `_after_f2` / `_after_f4` / `_after_f3`. R4 and R5 are the reason the review
+  was worth doing: neither moves a figure, but both misdescribed what the
+  safety net actually guards.
 
 - 2026-08-18 (evening): **the audit document exists and compiles** —
   `tmp/afc_hours_record_2026-08-18.tex`, nine sections, written for Vince and
