@@ -1,0 +1,210 @@
+<session_snapshot>
+  <origin>
+    <project>nhs-hour-log</project>
+    <session_date>2026-08-19 (afternoon and evening)</session_date>
+    <session_summary>The action session: the private pay calculator (Part ii)
+    was built in gitignored tmp/money/ and confirmed against the user's
+    payslip; website 1.4.2 removed the money wording from the within-baseline
+    flag; the audit document reached rev 3 (restructured, prose-edited,
+    user-edited, corrected against the user's own AfC handbook extracts) and
+    the user compiled and approved it; the covering email to the line manager
+    was planned, adversarially reviewed and drafted; the small share-check
+    email was SENT this evening. Late in the session, money figures and
+    strategy wording that had leaked into the public ledger were scrubbed and
+    today's git history rewritten (user-approved force push) so no reachable
+    commit carries them. Everything sensitive lives in tmp/ only.</session_summary>
+  </origin>
+
+  <do_not_redo>
+    <item>The audit document (tmp/afc_hours_record_2026-08-18.tex, rev 3) is
+    COMPILED AND APPROVED by the user. Do not re-edit it without a new
+    reason; any future edit must re-run the figure re-check and greps the
+    ledger describes.</item>
+    <item>Email 0 (the share-check email) was SENT to the line manager on
+    the evening of 2026-08-19. Do not draft another; the reply (or silence)
+    picks the branch in the decision tree at the top of
+    tmp/email_vince_additional_hours.md.</item>
+    <item>Email 1 (the covering email) is FINAL-DRAFT in the same tmp file,
+    with a fallback paragraph for the no-reply branch and the pre-send
+    checklist at the bottom. Refine only if the user asks.</item>
+    <item>The private money tool in tmp/money/ is complete and corrected:
+    the AfC handbook extract the user saved at tmp/afc.txt shows 2.15 bars
+    unsocial enhancement on overtime, so the strict-floor scenario is the
+    handbook reading (the earlier "handbook silent" web-check conclusion was
+    WRONG and is already corrected in rates.toml and money.py). Rate inputs
+    are payslip-confirmed. Do not re-verify.</item>
+    <item>Declining AfC 2.11's whole-shift night upgrade costs nothing on
+    current data: none of the 58 shifts is majority-night. Computed and
+    recorded in the ledger; the estimator script lived in the session
+    scratchpad and is EPHEMERAL — rebuild from the ledger description if
+    ever needed again.</item>
+    <item>Today's ledger history rewrite was deliberate and user-approved:
+    post-1.4.2 commits were squashed into 8c828fb to remove money figures,
+    salary details and strategy wording from the public repo. Do NOT restore
+    the old wording from any cache or transcript.</item>
+    <item>The three plans of 2026-08-19 (money tool, document revision,
+    email) are deliberately NOT archived to notes/plans/ — they contain
+    names and money. They live in the harness plans directory and tmp/;
+    the ledger is the repo-side record. A conscious break from the
+    archive-to-notes/plans convention.</item>
+    <item>engine_v2/ remains locked; nothing in it changed this session.
+    Website is at 1.4.2, live and verified.</item>
+  </do_not_redo>
+
+  <decisions_made>
+    <decision topic="public-repo-discipline">
+      <what>No money figure, salary detail, personal circumstance, or
+      correspondence-strategy wording may enter ANY committed file —
+      docs/TODO.md and notes/snapshots/ included. Sensitive material lives
+      in gitignored tmp/ and is referenced, never quoted.</what>
+      <why>The covering email hands the line manager the website link; the
+      public repo sits one click behind it. A reader there must never find
+      the author's own valuation of the claim or tactical language about
+      the people being written to. Learned the hard way: today's ledger
+      entries leaked both and forced a history rewrite.</why>
+    </decision>
+    <decision topic="pay-week-is-settled">
+      <what>The Monday-to-Sunday pay-week is treated as confirmed (verbal
+      confirmation to the user). The document states it as fact; the email
+      carries only a light ESR cross-check inside the process questions.</what>
+      <why>User: "there is no way it is any other way." The document and
+      email must not contradict each other, and re-opening a settled point
+      reads as doubt.</why>
+    </decision>
+    <decision topic="payment-frame">
+      <what>The email never argues payment versus time in lieu. Its only
+      questions are HOW to pay (who sends the breakdown, ESR route,
+      what confirmation payroll needs). The rulebook rebuttal for lieu
+      (three-month rule; sole-cover period ahead) is held in reserve,
+      deployed only if raised, and any personal context is spoken, never
+      written.</what>
+      <why>Choice architecture beats assertion: an email whose options are
+      all payment routes has excluded lieu without testing the water.
+      Written hardship travels with every forward to readers unknown.</why>
+    </decision>
+    <decision topic="two-email-sequencing">
+      <what>Small share-check email first (sent tonight), covering email
+      after the share is confirmed and the earlier handover email has had
+      about two days — Friday 2026-08-21 at the earliest, else Monday or
+      Tuesday with the fallback paragraph. Website link included in the
+      covering email where the site is introduced next to the own-time
+      clause.</what>
+      <why>The first email is light and unanswerable, dates the discovery
+      of the broken share, and reveals which world the sender is in before
+      the claim commits to a story. Rushing the second email would trade
+      that information for nothing.</why>
+    </decision>
+    <decision topic="notes-stay">
+      <what>The free-text notes in the public hours CSV stay as they are
+      (user decision, morning session): no redaction, be ready to explain.</what>
+      <why>User's call after the exposure was laid out.</why>
+    </decision>
+  </decisions_made>
+
+  <current_state>
+    <item>HEAD is 8c828fb "docs: session ledger for 19 Aug" after the
+    user-approved history rewrite; working tree clean before the snapshot
+    commit; main force-pushed and in sync. Unreachable pre-rewrite objects
+    may persist on the server until garbage collection — accepted risk,
+    nobody ever had the link.</item>
+    <item>Live site: website 1.4.2 serving schema 1.2.0 (58 days to
+    2026-08-18, 270.17 h owed). The within-baseline flag now explains
+    itself in plain language with no money wording anywhere in
+    website/src/ (grep-verified).</item>
+    <item>tmp/ (all uncommitted, gitignored): the compiled rev-3 audit
+    document and .tex; email_vince_additional_hours.md (Email 0 as sent,
+    Email 1 final draft, fallback, checklist); money/ (calculator,
+    rates.toml with payslip-confirmed inputs and corrected 2.15 notes,
+    report of 2026-08-19); afc.txt (user's handbook extracts: Section 1,
+    2.1-2.28, 3.1-3.7, 10.1-10.2, FAQ).</item>
+    <item>docs/TODO.md "Last updated" reflects this session. Now item 1 is
+    IN PROGRESS (Email 0 sent, Email 1 queued); Now item 2 was decided in
+    the morning session (notes stay). New Later item: per-week CSV exporter
+    if payroll accepts the weekly format.</item>
+    <item>Verified AfC facts on file (tmp/afc.txt): 2.10 minute-exact
+    unsocial windows; 2.11 is an upgrade-only whole-shift rule (declining
+    it can only under-count); 2.15 bars enhancement on overtime; 2.17
+    part-timers get enhancements below 37.5 h; 3.1 overtime is per-week
+    above 37.5 at time-and-a-half; 3.3 plain time until 37.5; 3.5 lieu
+    untaken in three months converts to overtime-rate payment; 3.7 lieu
+    accrues at plain time. Pensionability of additional hours up to WTE:
+    NHSBSA regulation change of April 2025, verified online.</item>
+    <item>Working Time Regulations position: about 47.3 h/week average
+    since 1 June against the 48 h rolling limit; no opt-out signed yet; the
+    covering email asks to put one in place.</item>
+  </current_state>
+
+  <next_steps>
+    <step priority="1">See docs/TODO.md Now item 1 (IN PROGRESS) — the
+    email decision tree is at the top of
+    tmp/email_vince_additional_hours.md. Branches: reply confirming the
+    share → send Email 1 once the handover-email gap is satisfied; reply
+    saying never-seen → adjust one background sentence first; no reply by
+    Friday midday → Monday/Tuesday morning with the fallback paragraph.</step>
+    <step priority="2">When payroll answers the format question: the
+    per-week CSV exporter is parked in TODO Later (read-only, from
+    web_data.json, no engine change).</step>
+    <step priority="3">After any reply from the line manager: the reply
+    playbook is in the email plan (harness plans directory) — not in the
+    repo. Themes: lieu → rulebook first; phasing → accept, never offer;
+    verification → point at the record.</step>
+  </next_steps>
+
+  <files_touched>
+    <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/website/src/components/WeeklyTable.vue">flag reworded, no money wording (committed, 1.4.2)</file>
+    <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/website/package.json">1.4.2 (committed)</file>
+    <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/docs/TODO.md">session entries, then scrubbed of money/strategy wording (committed, history rewritten)</file>
+    <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/CLAUDE.md">website version 1.4.2 (committed)</file>
+    <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/tmp/afc_hours_record_2026-08-18.tex">rev 3: user edits + fixes; compiled and approved (uncommitted)</file>
+    <file action="created" path="/home/filipejunqueira/code/nhs-hour-log/tmp/email_vince_additional_hours.md">Email 0 (sent) + Email 1 (final draft) + fallback + checklist (uncommitted)</file>
+    <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/tmp/money/rates.toml">payslip-confirmed inputs; 2.15 correction in verification notes (uncommitted)</file>
+    <file action="modified" path="/home/filipejunqueira/code/nhs-hour-log/tmp/money/money.py">four scenarios, coloured report, 2.15 wording correction (uncommitted)</file>
+    <file action="created" path="/home/filipejunqueira/code/nhs-hour-log/tmp/afc.txt">user-supplied AfC handbook extracts (uncommitted)</file>
+  </files_touched>
+
+  <files_to_read>
+    <file path="/home/filipejunqueira/code/nhs-hour-log/docs/TODO.md">THE LEDGER — Now item 1 carries the live state</file>
+    <file path="/home/filipejunqueira/code/nhs-hour-log/tmp/email_vince_additional_hours.md">both emails, the decision tree, the fallback, the checklist</file>
+    <file path="/home/filipejunqueira/code/nhs-hour-log/tmp/afc.txt">the verified AfC rules — read before any rules argument</file>
+    <file path="/home/filipejunqueira/code/nhs-hour-log/tmp/money/rates.toml">payslip-confirmed inputs and the corrected verification notes</file>
+    <file path="/home/filipejunqueira/code/nhs-hour-log/tmp/afc_hours_record_2026-08-18.tex">the document as compiled and approved</file>
+    <file path="/home/filipejunqueira/containers/claude-home/.claude/plans/exelent-what-would-be-unified-hoare.md">the email plan: argument inventory and reply playbook (harness-side, private)</file>
+  </files_to_read>
+
+  <domain_state>
+    <pipeline>Unchanged: download workbook, nhs-log-ingest, review,
+    nhs-log-deploy. NOTHING should be ingested until Email 1 is sent — the
+    attached record is dated as-at 18 August and must match the live page.</pipeline>
+    <engine>Schema 1.2.0, locked, untouched this session.</engine>
+    <website>1.4.2 live. The money-wording fix was entirely component-side;
+    the 87 render checks pass unchanged.</website>
+    <correspondence>Email 0 sent evening of 2026-08-19. Email 1 queued per
+    the decision tree. All sensitive strategy and figures live in tmp/ and
+    the harness plan file only.</correspondence>
+    <open_questions>Whether the line manager can see the re-shared
+    spreadsheet (Email 0's question); which submission format payroll wants;
+    the 48-hour opt-out signing.</open_questions>
+  </domain_state>
+
+  <warnings>
+    <warning>THE REPO IS PUBLIC AND THE COUNTERPARTY MAY READ IT once the
+    covering email's website link goes out. Never commit money figures,
+    salary details, personal circumstances, or strategy wording — TODO.md
+    and snapshots included. Today's history rewrite exists because this was
+    violated; do not repeat it.</warning>
+    <warning>The scratchpad is per-session and EPHEMERAL: the figure
+    re-check script and the 2.11 estimator died with earlier sessions and
+    were rebuilt once already. Anything worth keeping must be described in
+    the ledger or stored in tmp/.</warning>
+    <warning>The Bash working directory PERSISTS between calls — a cd in
+    one call left a later git command failing on a relative path this
+    session. Use git -C and absolute paths.</warning>
+    <warning>Do not run regen.sh/ingest.sh casually (rewrites generated_at
+    in two committed files), rm -rf is denied globally, the ruff hook
+    rewrites any .py on write, and Claude's shell HOME is a container (in
+    the user's global CLAUDE.md now).</warning>
+    <warning>tmp/ holds identified NHS documents, the emails, and all money
+    material. It is gitignored; never un-ignore, never commit its
+    contents.</warning>
+  </warnings>
+</session_snapshot>
