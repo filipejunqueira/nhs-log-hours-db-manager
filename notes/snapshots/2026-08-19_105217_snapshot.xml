@@ -243,7 +243,7 @@
     <warning>The global ruff hook reformats any .py on write and removes imports
     added in an earlier tool call than their first usage. The shellcheck hook
     blocks a .sh write on any finding — a rejected write is the hook working.</warning>
-    <warning>`[[ cond ]] && cmd` as a standalone statement under `set -e` exits
+    <warning>`[[ cond ]] &amp;&amp; cmd` as a standalone statement under `set -e` exits
     the script when the condition is false. This was a real bug in ingest.sh,
     caught by review; it is written as full `if` statements now with the reason
     in a comment.</warning>
