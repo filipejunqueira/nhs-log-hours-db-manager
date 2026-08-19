@@ -52,7 +52,7 @@ const flaggedWeeks = weeks.filter((w) => w.flagged_segments.length > 0)
               <span
                 v-if="w.unsocial_within_baseline_minutes > 0"
                 class="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-800"
-                :title="`${w.unsocial_within_baseline_minutes} unsocial minutes fell within the contracted baseline this week`"
+                :title="`${w.unsocial_within_baseline_minutes} unsocial minutes fell within the contracted baseline this week — part of contracted time, not extra hours`"
               >
                 flag
               </span>
@@ -64,8 +64,10 @@ const flaggedWeeks = weeks.filter((w) => w.flagged_segments.length > 0)
 
     <div v-if="flaggedWeeks.length > 0" class="mt-3 rounded border border-amber-300 bg-amber-50 p-3 text-sm">
       <p class="font-medium text-amber-900">
-        Unsocial time inside the contracted baseline (classified strictly, flagged for the
-        money layer to decide — never suppressed):
+        Unsocial time that fell inside the contracted
+        {{ minutesToHours(data.meta.contract.contracted_weekly_minutes) }} h for its week.
+        These minutes are part of normal contracted time, not extra hours; they are listed
+        here so that every unsocial minute is visible and nothing is hidden:
       </p>
       <ul class="mt-1 list-disc pl-5 text-amber-900">
         <li v-for="w in flaggedWeeks" :key="w.iso_week">
