@@ -16,13 +16,15 @@ email is queued.)
 
 *Neither item is engineering — the system is built, live and verified.*
 
-1. **Send the audit document to Vince and payroll.** IN PROGRESS: the
-   share-check email (Email 0) was sent to the line manager on the evening
-   of 2026-08-19. The covering email (Email 1, drafted with the PDF
-   attachment and the live-page link) goes per the decision tree in
-   `tmp/claim/email_vince_additional_hours.md`: Friday 2026-08-21 if the share is
-   confirmed and the handover email has had its two days, else Monday or
-   Tuesday morning with the fallback paragraph. The record itself is
+1. **Send the audit document to the line manager and payroll.** IN PROGRESS:
+   the share-check email went out on the evening of 2026-08-19 and was
+   answered the same evening — the log is confirmed visible, and the reply
+   raised points that changed the plan. The substantive reply now goes on
+   that existing thread (carrying the record as an attachment) rather than
+   as a fresh email; it is drafted, with the supporting material and the
+   send checklist, in `tmp/claim/` (gitignored — it quotes correspondence
+   and names people). Due Thursday evening or Friday morning. The record
+   itself is
    `tmp/claim/afc_hours_record_2026-08-18.tex` (rev 3, compiled and approved,
    uncommitted by design).
    Note on the pay-week: `rules.py` still records the Monday boundary as
@@ -102,7 +104,7 @@ email is queued.)
 ## Done log
 
 - 2026-08-19 (late): **the covering email is drafted** —
-  `tmp/claim/email_vince_additional_hours.md`, uncommitted (it names colleagues).
+  `tmp/claim/email_thread.md`, uncommitted (it names colleagues).
   Drafted and reviewed so that no sentence contradicts the audit document
   (the pay-week appears consistently with it), and the week-by-week
   breakdown is offered in the record's own per-pay-week shape with its
@@ -238,7 +240,7 @@ email is queued.)
   safety net actually guards.
 
 - 2026-08-18 (evening): **the audit document exists and compiles** —
-  `tmp/claim/afc_hours_record_2026-08-18.tex`, nine sections, written for Vince and
+  `tmp/claim/afc_hours_record_2026-08-18.tex`, nine sections, written for the line manager and
   payroll, fully identified, and deliberately NOT committed (the repo is public;
   `tmp/` is gitignored). Every figure was checked by script against
   `web_data.json` and every rule against `rules.py`; no currency symbol, no
@@ -420,7 +422,7 @@ email is queued.)
   long form.
 - 2026-08-10: designed the hours-OWED mechanism (planning only; no engine or
   website code touched). The gap: nothing anywhere records what payroll has
-  settled, so neither HR nor Vince can tell how many extra hours are actually
+  settled, so neither HR nor the line manager can tell how many extra hours are actually
   owed — only how many were worked. Answer: a Payments tab in the same
   workbook (one row per payment event), the engine subtracts, the site shows
   the remainder. Design decisions taken with the user: one owed bucket rather
