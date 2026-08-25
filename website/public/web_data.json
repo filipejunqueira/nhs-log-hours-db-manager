@@ -1,7 +1,7 @@
 {
   "meta": {
     "schema_version": "1.2.0",
-    "generated_at": "2026-08-18T19:07:13Z",
+    "generated_at": "2026-08-25T19:56:17Z",
     "unit": "minutes",
     "unit_note": "All durations are in minutes; divide by 60 for hours.",
     "contract": {
@@ -52,26 +52,26 @@
   "content": {
     "period": {
       "start": "2026-06-01",
-      "end": "2026-08-18"
+      "end": "2026-08-25"
     },
     "totals": {
-      "total_minutes": 32055,
-      "day_count": 58,
-      "week_count": 12,
+      "total_minutes": 33525,
+      "day_count": 63,
+      "week_count": 13,
       "minutes_by_band": {
-        "contracted": 15845,
-        "additional": 8310,
-        "overtime": 7900
+        "contracted": 16296,
+        "additional": 9210,
+        "overtime": 8019
       },
       "minutes_by_class": {
-        "daytime": 28312,
+        "daytime": 29483,
         "weekday_night": 1044,
         "saturday": 0,
-        "sunday": 2699,
+        "sunday": 2998,
         "bank_holiday": 0
       },
       "unsocial_within_baseline_minutes": 225,
-      "above_contract_minutes": 16210
+      "above_contract_minutes": 17229
     },
     "weekly": [
       {
@@ -305,15 +305,35 @@
       {
         "iso_week": "2026-W34",
         "monday": "2026-08-17",
-        "day_count": 2,
-        "total_minutes": 995,
+        "day_count": 6,
+        "total_minutes": 2369,
         "minutes_by_band": {
-          "contracted": 995,
+          "contracted": 1350,
+          "additional": 900,
+          "overtime": 119
+        },
+        "minutes_by_class": {
+          "daytime": 2070,
+          "weekday_night": 0,
+          "saturday": 0,
+          "sunday": 299,
+          "bank_holiday": 0
+        },
+        "unsocial_within_baseline_minutes": 0,
+        "flagged_segments": []
+      },
+      {
+        "iso_week": "2026-W35",
+        "monday": "2026-08-24",
+        "day_count": 1,
+        "total_minutes": 96,
+        "minutes_by_band": {
+          "contracted": 96,
           "additional": 0,
           "overtime": 0
         },
         "minutes_by_class": {
-          "daytime": 995,
+          "daytime": 96,
           "weekday_night": 0,
           "saturday": 0,
           "sunday": 0,
@@ -360,18 +380,18 @@
       },
       {
         "month": "2026-08",
-        "day_count": 11,
-        "total_minutes": 5712,
+        "day_count": 16,
+        "total_minutes": 7182,
         "minutes_by_band": {
-          "contracted": 3695,
-          "additional": 1258,
-          "overtime": 759
+          "contracted": 4146,
+          "additional": 2158,
+          "overtime": 878
         },
         "minutes_by_class": {
-          "daytime": 5096,
+          "daytime": 6267,
           "weekday_night": 0,
           "saturday": 0,
-          "sunday": 616,
+          "sunday": 915,
           "bank_holiday": 0
         }
       }
@@ -1246,28 +1266,103 @@
           "sunday": 0,
           "bank_holiday": 0
         }
+      },
+      {
+        "date": "2026-08-19",
+        "iso_weekday": 3,
+        "day_type": "weekday",
+        "start_minute": 428,
+        "end_minute": 1146,
+        "duration_minutes": 718,
+        "minutes_by_class": {
+          "daytime": 718,
+          "weekday_night": 0,
+          "saturday": 0,
+          "sunday": 0,
+          "bank_holiday": 0
+        }
+      },
+      {
+        "date": "2026-08-20",
+        "iso_weekday": 4,
+        "day_type": "weekday",
+        "start_minute": 595,
+        "end_minute": 951,
+        "duration_minutes": 356,
+        "minutes_by_class": {
+          "daytime": 356,
+          "weekday_night": 0,
+          "saturday": 0,
+          "sunday": 0,
+          "bank_holiday": 0
+        }
+      },
+      {
+        "date": "2026-08-21",
+        "iso_weekday": 5,
+        "day_type": "weekday",
+        "start_minute": 840,
+        "end_minute": 841,
+        "duration_minutes": 1,
+        "minutes_by_class": {
+          "daytime": 1,
+          "weekday_night": 0,
+          "saturday": 0,
+          "sunday": 0,
+          "bank_holiday": 0
+        }
+      },
+      {
+        "date": "2026-08-23",
+        "iso_weekday": 7,
+        "day_type": "sunday",
+        "start_minute": 481,
+        "end_minute": 780,
+        "duration_minutes": 299,
+        "minutes_by_class": {
+          "daytime": 0,
+          "weekday_night": 0,
+          "saturday": 0,
+          "sunday": 299,
+          "bank_holiday": 0
+        }
+      },
+      {
+        "date": "2026-08-25",
+        "iso_weekday": 2,
+        "day_type": "weekday",
+        "start_minute": 843,
+        "end_minute": 939,
+        "duration_minutes": 96,
+        "minutes_by_class": {
+          "daytime": 96,
+          "weekday_night": 0,
+          "saturday": 0,
+          "sunday": 0,
+          "bank_holiday": 0
+        }
       }
     ],
     "cross_tab": {
       "contracted": {
-        "daytime": 15620,
+        "daytime": 16071,
         "weekday_night": 225,
         "saturday": 0,
         "sunday": 0,
         "bank_holiday": 0
       },
       "additional": {
-        "daytime": 7419,
+        "daytime": 8139,
         "weekday_night": 306,
         "saturday": 0,
-        "sunday": 585,
+        "sunday": 765,
         "bank_holiday": 0
       },
       "overtime": {
         "daytime": 5273,
         "weekday_night": 513,
         "saturday": 0,
-        "sunday": 2114,
+        "sunday": 2233,
         "bank_holiday": 0
       }
     },
@@ -1503,44 +1598,64 @@
       {
         "date": "2026-08-18",
         "cumulative_minutes": 32055
+      },
+      {
+        "date": "2026-08-19",
+        "cumulative_minutes": 32773
+      },
+      {
+        "date": "2026-08-20",
+        "cumulative_minutes": 33129
+      },
+      {
+        "date": "2026-08-21",
+        "cumulative_minutes": 33130
+      },
+      {
+        "date": "2026-08-23",
+        "cumulative_minutes": 33429
+      },
+      {
+        "date": "2026-08-25",
+        "cumulative_minutes": 33525
       }
     ],
     "statistics": {
       "pct_by_band": {
-        "contracted": 49.43,
-        "additional": 25.92,
-        "overtime": 24.65
+        "contracted": 48.61,
+        "additional": 27.47,
+        "overtime": 23.92
       },
       "pct_by_class": {
-        "daytime": 88.32,
-        "weekday_night": 3.26,
+        "daytime": 87.94,
+        "weekday_night": 3.11,
         "saturday": 0.0,
-        "sunday": 8.42,
+        "sunday": 8.94,
         "bank_holiday": 0.0
       },
-      "mean_minutes_per_day": 552.7,
-      "mean_minutes_per_week": 2671.2,
-      "mean_start_minute": 512.2,
-      "mean_end_minute": 1064.9,
+      "mean_minutes_per_day": 532.1,
+      "mean_minutes_per_week": 2578.8,
+      "mean_start_minute": 522.1,
+      "mean_end_minute": 1054.3,
       "longest_day": {
         "date": "2026-07-22",
         "minutes": 983
       },
       "shortest_day": {
-        "date": "2026-07-10",
-        "minutes": 170
+        "date": "2026-08-21",
+        "minutes": 1
       },
       "days_touching_class": {
-        "daytime": 53,
+        "daytime": 57,
         "weekday_night": 7,
         "saturday": 0,
-        "sunday": 5,
+        "sunday": 6,
         "bank_holiday": 0
       }
     },
     "payments": {
       "paid_minutes": 0,
-      "unpaid_minutes": 16210,
+      "unpaid_minutes": 17229,
       "overpaid_minutes": 0,
       "paid_up_to": null,
       "ledger": [],
@@ -1610,6 +1725,12 @@
           "monday": "2026-08-10",
           "extra_minutes": 1659,
           "unpaid_minutes": 1659
+        },
+        {
+          "iso_week": "2026-W34",
+          "monday": "2026-08-17",
+          "extra_minutes": 1019,
+          "unpaid_minutes": 1019
         }
       ],
       "warnings": []
@@ -1622,8 +1743,8 @@
       "crosstab_ok": true,
       "span_ok": true,
       "monthly_ok": true,
-      "total_raw_minutes": 32055,
-      "total_segment_minutes": 32055,
+      "total_raw_minutes": 33525,
+      "total_segment_minutes": 33525,
       "unsocial_within_baseline_minutes": 225,
       "warnings": []
     }
