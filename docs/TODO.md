@@ -4,29 +4,27 @@ Single source of truth for what is done, what is next, and what is parked.
 Update this file as part of every session wrap-up (project-knowledge-updater
 reads and propagates; session snapshots should reference it, not duplicate it).
 
-Last updated: 2026-08-19, late evening (session: money.py priced the owed
-hours privately at the payslip-confirmed rate; website 1.4.2 removed the
-money wording from the within-baseline flag; the audit document reached rev 3
-— restructured, prose-edited, user-edited, corrected against the user's AfC
-handbook extracts; the covering email was planned, drafted and reviewed;
-the share-check email went to the line manager this evening and the covering
-email is queued.)
+Last updated: 2026-08-25, evening (session: the log was ingested to 25 Aug
+and a spurious 1-minute row removed; the audit document was refreshed to
+rev 4 on the new figures, with every figure re-derived from web_data.json
+and every rules citation verified against the current handbook online; the
+substantive reply went to the line manager on the existing thread with the
+record attached — SENT this evening.)
 
 ## Now (in order)
 
 *Neither item is engineering — the system is built, live and verified.*
 
-1. **Send the audit document to the line manager and payroll.** IN PROGRESS:
-   the share-check email went out on the evening of 2026-08-19 and was
-   answered the same evening — the log is confirmed visible, and the reply
-   raised points that changed the plan. The substantive reply now goes on
-   that existing thread (carrying the record as an attachment) rather than
-   as a fresh email; it is drafted, with the supporting material and the
-   send checklist, in `tmp/claim/` (gitignored — it quotes correspondence
-   and names people). Due Thursday evening or Friday morning. The record
-   itself is
-   `tmp/claim/afc_hours_record_2026-08-18.tex` (rev 3, compiled and approved,
-   uncommitted by design).
+1. **Send the audit document to the line manager and payroll.** SENT
+   2026-08-25, evening: the substantive reply went on the existing thread
+   with the record attached — `tmp/claim/afc_hours_record_2026-08-25.tex`
+   (rev 4, as-at 25 Aug, uncommitted by design; figures re-derived from
+   `web_data.json`, 26 checks, and every rules citation verified against
+   the NHS T&C handbook, Amendment 62 of 1 June 2026, and the NHSBSA
+   April 2025 pensionability change, both checked online). Now AWAITING
+   THE REPLY; the prepared responses live in `tmp/claim/` (gitignored — it
+   quotes correspondence and names people). When the format question is
+   answered, the per-week CSV exporter unparks from Later.
    Note on the pay-week: `rules.py` still records the Monday boundary as
    assumed and unconfirmed against LTHT's ESR definition. It cannot change
    the total (534.25 h either way) but it moves the additional/overtime
@@ -102,6 +100,30 @@ email is queued.)
   Reconcile the wording, or add real tests, later (flagged 2026-07-21).
 
 ## Done log
+
+- 2026-08-25: **the substantive reply is SENT, record attached.** The day in
+  three parts. (a) Data: the user ingested the log to 25 Aug and, after a
+  review flag, removed a spurious 1-minute row on 21 Aug and re-ingested
+  (user commits 59c8aa3, ba4f506) — 62 days, 13 pay-weeks, 33 524 min,
+  17 228 min above contract; live page confirmed serving the same bytes.
+  (b) Record: refreshed to rev 4 as a dated copy (the approved 18 Aug rev 3
+  kept untouched) — figures only, plus a proportions paragraph (87.94%
+  weekday daytime; 98.62% of the contracted baseline at daytime; 94.43% of
+  unsocial time above contract; 53.46% of above-contract hours additional
+  rather than overtime), a for-HR/payroll line, and two accuracy fixes
+  (the 145 automated checks are the program's own suite, not the 19 Aug
+  reimplementation's 92 comparisons; a stray address separator). Every
+  figure re-derived from `web_data.json` by script (26 checks, all match);
+  greps clean (no currency, no names, no repo URL). Every rules citation
+  verified online against the current handbook (Amendment 62, TCS Advisory
+  Notice 03/2026, 1 June 2026 — the exact version the record cites) and the
+  NHSBSA April 2025 change (additional hours up to WTE pensionable).
+  (c) Correspondence: the reply was drafted (the 20 Aug session's draft was
+  never saved — rebuilt from the strategy file), passed through the
+  anti-LLM prose pass, user-edited, and SENT on the evening of 25 Aug on
+  the existing thread with the rev 4 PDF attached. Awaiting the response;
+  nothing should be ingested until the record no longer needs to match the
+  live page as sent.
 
 - 2026-08-19 (late): **the covering email is drafted** —
   `tmp/claim/email_thread.md`, uncommitted (it names colleagues).
